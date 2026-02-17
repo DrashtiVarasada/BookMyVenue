@@ -1,0 +1,26 @@
+# Python compiled files
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Virtual Environment
+venv/
+venv_trash/
+env/
+.venv
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
+# Environment variables 
+.env
+.env.local
+
+# IDE settings
+.vscode/
+.idea/
+.DS_Store
