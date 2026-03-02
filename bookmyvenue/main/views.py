@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import User
-import re
+from django.http import JsonResponse
+import json
+from .models import User, Venue, VenueImage
 
 def login_view(request):
     if request.method == 'POST':
@@ -13,7 +14,7 @@ def login_view(request):
             if user.check_password(password):
                 request.session['user_id'] = user.id
                 request.session['user_name'] = user.username
-                request.session['user_role'] = user.role
+                request.session['user_role'] = user.role.strip().lower()
                 
                 messages.success(request, f'Welcome back, {user.username}!')
                 return redirect('dashboard')
@@ -77,7 +78,7 @@ def signup_view(request):
         # Auto login after signup
         request.session['user_id'] = user.id
         request.session['user_name'] = user.username
-        request.session['user_role'] = user.role
+        request.session['user_role'] = user.role.strip().lower()
         
         messages.success(request, f'Account created successfully! Welcome, {username}!')
         return redirect('dashboard')
@@ -93,7 +94,8 @@ def dashboard_view(request):
         'role': request.session.get('user_role')
     }
     
-    if context['role'] == 'venue_owner':
+    role = (context.get('role') or '').strip().lower()
+    if role in ['venue_owner', 'venue owner', 'owner', 'venueowner']:
         return render(request, 'owner_dashboard.html', context)
     else:
         return render(request, 'customer_dashboard.html', context)
@@ -162,3 +164,112 @@ def logout_view(request):
     request.session.flush()
     messages.success(request, 'Logged out successfully')
     return redirect('login')
+
+def save_venue(request):
+    if request.method == 'POST' and 'user_id' in request.session:
+        try:
+            owner = User.objects.get(id=request.session['user_id'])
+            
+            # Extract data
+            data = request.POST
+            venue_id = data.get('venue_id') # For editing
+            
+            if venue_id:
+                venue = Venue.objects.get(id=venue_id, owner=owner)
+            else:
+                venue = Venue(owner=owner)
+            
+            venue.name = data.get('venueName')
+            venue.owner_name = data.get('ownerName')
+            venue.address = data.get('venueAddress')
+            venue.city = data.get('city')
+            venue.state = data.get('state')
+            venue.capacity = data.get('capacity')
+            venue.total_area = data.get('totalArea')
+            venue.parking_area = data.get('parkingArea')
+            venue.venue_type = data.get('venueType')
+            venue.facilities = data.get('facilities')
+            venue.instructions = data.get('instructions')
+            venue.price = data.get('price')
+            venue.contact1 = data.get('contact1')
+            venue.contact2 = data.get('contact2')
+            
+            venue.save()
+            
+            # Handle Images
+            images = request.FILES.getlist('images')
+            if images:
+                # Optionally, delete old images on update
+                if venue_id:
+                    venue.images.all().delete()
+                    
+                for image in images:
+                    VenueImage.objects.create(venue=venue, image=image)
+                    
+            return JsonResponse({'status': 'success', 'message': 'Venue saved successfully!'})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+def get_venues(request):
+    if request.method == 'GET' and 'user_id' in request.session:
+        owner = User.objects.get(id=request.session['user_id'])
+        venues = Venue.objects.filter(owner=owner)
+        
+        venues_data = []
+        for v in venues:
+            venues_data.append({
+                'id': v.id,
+                'venueName': v.name,
+                'ownerName': v.owner_name,
+                'venueAddress': v.address,
+                'city': v.city,
+                'state': v.state,
+                'capacity': v.capacity,
+                'totalArea': v.total_area,
+                'parkingArea': v.parking_area,
+                'venueType': v.venue_type,
+                'facilities': v.facilities,
+                'instructions': v.instructions,
+                'price': str(v.price),
+                'contact1': v.contact1,
+                'contact2': v.contact2,
+                'imageCount': v.images.count(),
+                'images': [img.image.url for img in v.images.all()]
+            })
+            
+        return JsonResponse({'status': 'success', 'venues': venues_data})
+        
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+def get_all_venues(request):
+    if request.method == 'GET':
+        venues = Venue.objects.all()
+        
+        venues_data = []
+        for v in venues:
+            venues_data.append({
+                'id': v.id,
+                'venueName': v.name,
+                'ownerName': v.owner_name,
+                'venueAddress': v.address,
+                'city': v.city,
+                'state': v.state,
+                'capacity': v.capacity,
+                'totalArea': v.total_area,
+                'parkingArea': v.parking_area,
+                'venueType': v.venue_type,
+                'facilities': v.facilities,
+                'instructions': v.instructions,
+                'price': str(v.price),
+                'contact1': v.contact1,
+                'contact2': v.contact2,
+                'imageCount': v.images.count(),
+                'images': [img.image.url for img in v.images.all()]
+            })
+            
+        return JsonResponse({'status': 'success', 'venues': venues_data})
+        
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

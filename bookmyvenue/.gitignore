@@ -16,11 +16,21 @@ db.sqlite3-journal
 /media
 /staticfiles
 
-# Environment variables 
+# Environment variables
 .env
 .env.local
+
+# Local settings override
+local_settings.py
 
 # IDE settings
 .vscode/
 .idea/
 .DS_Store
+
+# Test coverage reports
+.coverage
+htmlcov/
+
+# OS files
+Thumbs.db

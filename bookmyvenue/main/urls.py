@@ -9,4 +9,7 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password_view, name='forgot_password'),
     path('reset-password/', views.reset_password_view, name='reset_password'),
     path('logout/', views.logout_view, name='logout'),
+    path('api/save-venue/', views.save_venue, name='save_venue'),
+    path('api/get-venues/', views.get_venues, name='get_venues'),
+    path('api/get-all-venues/', views.get_all_venues, name='get_all_venues'),
 ]
