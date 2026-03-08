@@ -120,10 +120,19 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # Static files mate
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Media files (Uploaded by users)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Session settings (simple)
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # ✅ comma remove karo
+# Custom user model
+AUTH_USER_MODEL = 'main.User'
+
+# Auth redirects
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+

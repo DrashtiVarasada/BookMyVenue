@@ -53,36 +53,60 @@
             <div class="form-row" id="row-username">
                 <label for="username"> Username</label>
                 <div class="input-wrapper">
-                    <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="off" value="{{ username|default:'' }}" required>
+                    <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="off" value="{{ username|default:'' }}" required {% if username_error %}class="input-error"{% endif %}>
                 </div>
+                {% if username_error %}
+                <div id="usernameError" class="error-msg" style="display: flex;">
+                    <i class="fas fa-exclamation-circle"></i> {{ username_error }}
+                </div>
+                {% else %}
                 <div id="usernameError" class="error-msg" style="display: none;"></div>
+                {% endif %}
             </div>
 
             <!-- Email row -->
             <div class="form-row" id="row-email">
                 <label for="email"> Email</label>
                 <div class="input-wrapper">
-                    <input type="email" id="email" name="email" placeholder="Enter email" autocomplete="off" value="{{ email|default:'' }}" required>
+                    <input type="email" id="email" name="email" placeholder="Enter email" autocomplete="off" value="{{ email|default:'' }}" required {% if email_error %}class="input-error"{% endif %}>
                 </div>
+                {% if email_error %}
+                <div id="emailError" class="error-msg" style="display: flex;">
+                    <i class="fas fa-exclamation-circle"></i> {{ email_error }}
+                </div>
+                {% else %}
                 <div id="emailError" class="error-msg" style="display: none;"></div>
+                {% endif %}
             </div>
 
             <!-- Password row + strength meter -->
             <div class="form-row" id="row-password">
                 <label for="password"> Password</label>
                 <div class="input-wrapper">
-                    <input type="password" id="password" name="password" placeholder="Enter password" autocomplete="off" value="{{ password|default:'' }}" required>
+                    <input type="password" id="password" name="password" placeholder="Enter password" autocomplete="off" value="{{ password|default:'' }}" required {% if password_error %}class="input-error"{% endif %}>
                 </div>
+                {% if password_error %}
+                <div id="passwordError" class="error-msg" style="display: flex;">
+                    <i class="fas fa-exclamation-circle"></i> {{ password_error }}
+                </div>
+                {% else %}
                 <div id="passwordError" class="error-msg" style="display: none;"></div>
+                {% endif %}
             </div>
 
             <!-- Confirm Password row -->
             <div class="form-row" id="row-confirm">
                 <label for="confirmPassword">Confirm Password</label>
                 <div class="input-wrapper">
-                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" autocomplete="off" value="{{ confirmPassword|default:'' }}" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" autocomplete="off" value="{{ confirmPassword|default:'' }}" required {% if confirm_error %}class="input-error"{% endif %}>
                 </div>
+                {% if confirm_error %}
+                <div id="confirmError" class="error-msg" style="display: flex;">
+                    <i class="fas fa-exclamation-circle"></i> {{ confirm_error }}
+                </div>
+                {% else %}
                 <div id="confirmError" class="error-msg" style="display: none;"></div>
+                {% endif %}
             </div>
 
             <!-- Register button (matches mockup) -->
@@ -212,17 +236,22 @@
 
     // Event listeners
     username.addEventListener('input', function() {
-        if (username.value.trim().length >= 3)
+        if (username.value.trim().length > 0)
             clearError(username, usernameErr);
     });
 
     email.addEventListener('input', function() {
-        if (isValidEmail(email.value.trim()))
+        if (email.value.trim().length > 0)
             clearError(email, emailErr);
     });
 
+    password.addEventListener('input', function() {
+        if (password.value.length > 0)
+            clearError(password, passwordErr);
+    });
+
     confirmPw.addEventListener('input', function() {
-        if (confirmPw.value === password.value)
+        if (confirmPw.value.length > 0)
             clearError(confirmPw, confirmErr);
     });
 

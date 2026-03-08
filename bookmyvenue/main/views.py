@@ -1,164 +1,307 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import User
-import re
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .models import User, Venue, VenueImage
+
+
+# ---------------------------------------------------------------------------
+# Auth views
+# ---------------------------------------------------------------------------
 
 def login_view(request):
+    # We purposefully do NOT redirect authenticated users here anymore
+    # so they always land on the sign-in page when opening the site.
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
-        try:
-            user = User.objects.get(username=username)
-            if user.check_password(password):
-                request.session['user_id'] = user.id
-                request.session['user_name'] = user.username
-                request.session['user_role'] = user.role
-                
-                messages.success(request, f'Welcome back, {user.username}!')
+        errors = {}
+
+        if not username:
+            errors['username'] = 'Username is required.'
+        if not password:
+            errors['password'] = 'Password is required.'
+
+        user_obj = None
+        if username:
+            try:
+                user_obj = User.objects.get(username=username)
+            except User.DoesNotExist:
+                if 'username' not in errors:
+                    errors['username'] = 'Account does not exist. Please sign up first.'
+
+        # Only check password if username was provided and user exists and password was provided
+        if user_obj and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
                 return redirect('dashboard')
             else:
-                messages.error(request, 'Incorrect password. Please try again.')
-                return render(request, 'signin.html', {
-                    'username': username
-                })
-        except User.DoesNotExist:
-            messages.error(request, 'Account does not exist. Please sign up first.')
+                errors['password'] = 'Incorrect password. Please try again.'
+
+        # If there are any errors, pass them explicitly to the template
+        if errors:
             return render(request, 'signin.html', {
-                'username': username
+                'username': username,
+                'username_error': errors.get('username'),
+                'password_error': errors.get('password')
             })
-    
+
     return render(request, 'signin.html')
 
+
 def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
         password2 = request.POST.get('confirmPassword')
         role = request.POST.get('roleSelect')
-        
+
         # Collect all validation errors
-        errors = []
-        
-        # Check if username already exists
+        errors = {}
+
         if User.objects.filter(username=username).exists():
-            errors.append('Username already taken. Please choose a different username.')
-        
-        # Check if passwords match
+            errors['username'] = 'Username already taken. Please choose a different username.'
+
         if password != password2:
-            errors.append('Passwords do not match.')
-        
-        # Check if email already exists
+            errors['confirmPassword'] = 'Passwords do not match.'
+
         if User.objects.filter(email=email).exists():
-            errors.append('Email already registered. Please use a different email.')
-        
-        # If there are any errors, display them all together
+            errors['email'] = 'Email already registered. Please use a different email.'
+
         if errors:
-            for error in errors:
-                messages.error(request, error)
             return render(request, 'signup.html', {
                 'username': username,
                 'email': email,
                 'selected_role': role,
                 'password': password,
-                'confirmPassword': password2
+                'confirmPassword': password2,
+                'username_error': errors.get('username'),
+                'email_error': errors.get('email'),
+                'confirm_error': errors.get('confirmPassword')
             })
-        
+
         # Create new user
-        user = User(
-            email=email,
-            username=username,
-            role=role
-        )
+        user = User(email=email, username=username, role=role)
         user.set_password(password)
         user.save()
-        
+
         # Auto login after signup
-        request.session['user_id'] = user.id
-        request.session['user_name'] = user.username
-        request.session['user_role'] = user.role
-        
-        messages.success(request, f'Account created successfully! Welcome, {username}!')
+        login(request, user)
         return redirect('dashboard')
-    
+
     return render(request, 'signup.html')
 
+
+@login_required(login_url='login')
 def dashboard_view(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
-    
+    user = request.user
     context = {
-        'full_name': request.session.get('user_name'),
-        'role': request.session.get('user_role')
+        'full_name': user.username,
+        'role': user.role
     }
-    
-    if context['role'] == 'venue_owner':
+
+    role = (user.role or '').strip().lower()
+    if role in ['venue_owner', 'venue owner', 'owner', 'venueowner'] or user.is_superuser or user.is_staff:
         return render(request, 'owner_dashboard.html', context)
     else:
         return render(request, 'customer_dashboard.html', context)
+
+
+@login_required(login_url='login')
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Logged out successfully')
+    return redirect('login')
+
+
+
+# Forgot / Reset password  (username passed as hidden form field — no session)
+
 
 def forgot_password_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
-        
-        # Verify that username and email match
+
         try:
-            user = User.objects.get(username=username, email=email)
-            # Store username in session for password reset
-            request.session['reset_username'] = username
+            User.objects.get(username=username, email=email)
             messages.success(request, 'Verification successful! Please enter your new password.')
-            return redirect('reset_password')
+            # Render reset page directly — pass username via context (→ hidden field in form)
+            return render(request, 'reset_password.html', {'username': username})
         except User.DoesNotExist:
             messages.error(request, 'Username and email do not match. Please try again.')
             return render(request, 'forgot_password.html', {
                 'username': username,
                 'email': email
             })
-    
+
     return render(request, 'forgot_password.html')
 
+
 def reset_password_view(request):
-    # Check if user has verified their identity
-    if 'reset_username' not in request.session:
-        messages.error(request, 'Please verify your identity first.')
-        return redirect('forgot_password')
-    
-    username = request.session.get('reset_username')
-    
     if request.method == 'POST':
+        # Username submitted via hidden field in the reset_password form
+        username = request.POST.get('username')
         password = request.POST.get('password')
         password2 = request.POST.get('confirmPassword')
-        
-        # Validate passwords match
+
+        if not username:
+            messages.error(request, 'Please verify your identity first.')
+            return redirect('forgot_password')
+
         if password != password2:
             messages.error(request, 'Passwords do not match. Please try again.')
             return render(request, 'reset_password.html', {'username': username})
-        
-        # Validate password length
+
         if len(password) < 6:
             messages.error(request, 'Password must be at least 6 characters.')
             return render(request, 'reset_password.html', {'username': username})
-        
-        # Update password
+
         try:
             user = User.objects.get(username=username)
             user.set_password(password)
             user.save()
-            
-            # Clear session
-            del request.session['reset_username']
-            
             messages.success(request, 'Password reset successful! Please sign in with your new password.')
             return redirect('login')
         except User.DoesNotExist:
             messages.error(request, 'User not found.')
             return redirect('forgot_password')
-    
-    return render(request, 'reset_password.html', {'username': username})
 
-def logout_view(request):
-    request.session.flush()
-    messages.success(request, 'Logged out successfully')
-    return redirect('login')
+    # Direct GET access — send back to forgot password
+    messages.error(request, 'Please verify your identity first.')
+    return redirect('forgot_password')
+
+
+# ---------------------------------------------------------------------------
+# Venue API views
+# ---------------------------------------------------------------------------
+
+@login_required(login_url='login')
+def save_venue(request):
+    if request.method == 'POST':
+        try:
+            owner = request.user
+
+            data = request.POST
+            venue_id = data.get('venue_id')  # For editing
+
+            if venue_id:
+                venue = Venue.objects.get(id=venue_id, owner=owner)
+            else:
+                venue = Venue(owner=owner)
+
+            venue.name = data.get('venueName')
+            venue.owner_name = data.get('ownerName')
+            venue.address = data.get('venueAddress')
+            venue.city = data.get('city')
+            venue.state = data.get('state')
+            venue.capacity = data.get('capacity')
+            venue.total_area = data.get('totalArea')
+            venue.parking_area = data.get('parkingArea')
+            venue.venue_type = data.get('venueType')
+            venue.facilities = data.get('facilities')
+            venue.instructions = data.get('instructions')
+            venue.price = data.get('price')
+            venue.contact1 = data.get('contact1')
+            venue.contact2 = data.get('contact2')
+
+            venue.save()
+
+            # Handle deletions of specific old images
+            deleted_image_urls = request.POST.getlist('deleted_images[]')
+            if deleted_image_urls and venue_id:
+                # The frontend passes the exact URL of the image to delete
+                for img_url in deleted_image_urls:
+                    # Find and delete the image matching the URL for this venue
+                    img_to_delete = venue.images.filter(image__contains=img_url.split('/media/')[-1]).first()
+                    if img_to_delete:
+                        img_to_delete.delete()
+
+            # Handle new images (Append only)
+            images = request.FILES.getlist('images')
+            if images:
+                # Check current count to enforce max 10 server-side
+                current_count = venue.images.count()
+                if current_count + len(images) > 10:
+                    return JsonResponse({'status': 'error', 'message': f'Cannot exceed 10 images. You currently have {current_count}.'}, status=400)
+                
+                for image in images:
+                    VenueImage.objects.create(venue=venue, image=image)
+
+            return JsonResponse({'status': 'success', 'message': 'Venue saved successfully!'})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+@login_required(login_url='login')
+def get_venues(request):
+    if request.method == 'GET':
+        owner = request.user
+        venues = Venue.objects.filter(owner=owner)
+
+        venues_data = []
+        for v in venues:
+            venues_data.append({
+                'id': v.id,
+                'venueName': v.name,
+                'ownerName': v.owner_name,
+                'venueAddress': v.address,
+                'city': v.city,
+                'state': v.state,
+                'capacity': v.capacity,
+                'totalArea': v.total_area,
+                'parkingArea': v.parking_area,
+                'venueType': v.venue_type,
+                'facilities': v.facilities,
+                'instructions': v.instructions,
+                'price': str(v.price),
+                'contact1': v.contact1,
+                'contact2': v.contact2,
+                'imageCount': v.images.count(),
+                'images': [img.image.url for img in v.images.all()]
+            })
+
+        return JsonResponse({'status': 'success', 'venues': venues_data})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+def get_all_venues(request):
+    if request.method == 'GET':
+        venues = Venue.objects.all()
+
+        venues_data = []
+        for v in venues:
+            venues_data.append({
+                'id': v.id,
+                'venueName': v.name,
+                'ownerName': v.owner_name,
+                'venueAddress': v.address,
+                'city': v.city,
+                'state': v.state,
+                'capacity': v.capacity,
+                'totalArea': v.total_area,
+                'parkingArea': v.parking_area,
+                'venueType': v.venue_type,
+                'facilities': v.facilities,
+                'instructions': v.instructions,
+                'price': str(v.price),
+                'contact1': v.contact1,
+                'contact2': v.contact2,
+                'imageCount': v.images.count(),
+                'images': [img.image.url for img in v.images.all()]
+            })
+
+        return JsonResponse({'status': 'success', 'venues': venues_data})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
