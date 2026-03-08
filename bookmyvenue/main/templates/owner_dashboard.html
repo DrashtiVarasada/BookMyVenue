@@ -1,602 +1,835 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BookMyVenue - Venue Information</title>
-    <link rel="stylesheet" href="{% static 'owner_dashboard.css' %}">
-</head>
-<body>
-
-<!-- Navigation Bar -->
-<nav class="navbar">
-    <span class="navbar-brand">BookMyVenue - Welcome, {{ full_name|default:"Owner" }}!</span>
-    <div class="navbar-links">
+    <link rel="stylesheet" href="{% static 'owner_dashboard.css' %}" />
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <span class="navbar-brand"
+        >BookMyVenue - Welcome, {{ full_name|default:"Owner" }}!</span
+      >
+      <div class="navbar-links">
         <button class="btn" onclick="showView('list')">My Venues</button>
         <button class="btn" onclick="newVenue()">+ Add New Venue</button>
-        <button class="btn btn-secondary" onclick="showView('user')">&#128065; View as User</button>
+        <button class="btn btn-secondary" onclick="showView('user')">
+          &#128065; View as User
+        </button>
         <button class="btn btn-danger" onclick="logout()">Logout</button>
-    </div>
-</nav>
+      </div>
+    </nav>
 
-<!-- ── USER VIEW ── -->
-<div id="userView" style="display:none;">
-    <div class="page-wrapper">
+    <!-- ── USER VIEW ── -->
+    <div id="userView" style="display: none">
+      <div class="page-wrapper">
         <div class="container">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <h2>Browse Venues</h2>
-                <button class="btn btn-secondary" onclick="showView('list')">&#8592; Back to Dashboard</button>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 4px;
+            "
+          >
+            <h2>Browse Venues</h2>
+            <button class="btn btn-secondary" onclick="showView('list')">
+              &#8592; Back to Dashboard
+            </button>
+          </div>
+          <p style="color: #7a9aa0; font-size: 13px; margin-bottom: 16px">
+            This is how customers see your venues.
+          </p>
+          <div id="userVenueList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VENUES LIST VIEW ── -->
+    <div id="listView" style="display: none">
+      <div class="page-wrapper">
+        <div class="container">
+          <h2>My Venues</h2>
+          <div id="venueList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FORM VIEW ── -->
+    <div id="formView">
+      <div class="page-wrapper">
+        <div class="container">
+          <h2 id="formTitle">Venue Information</h2>
+
+          <form id="venueForm">
+            <input type="hidden" id="editIndex" value="-1" />
+
+            <label>Venue Name *</label>
+            <input
+              type="text"
+              id="venueName"
+              placeholder="e.g. Grand Ballroom"
+            />
+            <div class="error" id="err-venueName"></div>
+
+            <label>Owner / Manager Name *</label>
+            <input
+              type="text"
+              id="ownerName"
+              placeholder="e.g. Ramesh Sharma"
+            />
+            <div class="error" id="err-ownerName"></div>
+
+            <label>Venue Address *</label>
+            <textarea
+              id="venueAddress"
+              rows="2"
+              placeholder="Street / Area"
+            ></textarea>
+            <div class="error" id="err-venueAddress"></div>
+
+            <label>City *</label>
+            <input type="text" id="city" placeholder="e.g. Mumbai" />
+            <div class="error" id="err-city"></div>
+
+            <label>State *</label>
+            <input type="text" id="state" placeholder="e.g. Maharashtra" />
+            <div class="error" id="err-state"></div>
+
+            <label>Maximum People Capacity *</label>
+            <input type="text" id="capacity" placeholder="e.g. 500" />
+            <div class="error" id="err-capacity"></div>
+
+            <label>Total Area (sq. ft) <small>(Optional)</small></label>
+            <input type="text" id="totalArea" placeholder="e.g. 8000" />
+
+            <label>Parking Area (sq. ft) <small>(Optional)</small></label>
+            <input type="text" id="parkingArea" placeholder="e.g. 2000" />
+
+            <label>Venue Type *</label>
+            <div class="radio-group">
+              <label
+                ><input type="radio" name="venueType" value="AC" /> AC</label
+              >
+              <label
+                ><input type="radio" name="venueType" value="Non-AC" />
+                Non-AC</label
+              >
+              <label
+                ><input type="radio" name="venueType" value="Both" />
+                Both</label
+              >
             </div>
-            <p style="color:#7a9aa0;font-size:13px;margin-bottom:16px;">This is how customers see your venues.</p>
-            <div id="userVenueList"></div>
+            <div class="error" id="err-venueType"></div>
+
+            <label>Facilities <small>(Optional)</small></label>
+            <input
+              type="text"
+              id="facilities"
+              placeholder="e.g. WiFi, Projector, Catering, DJ"
+            />
+
+            <label>Instructions / Notes <small>(Optional)</small></label>
+            <textarea
+              id="instructions"
+              rows="2"
+              placeholder="Any special rules or guidelines for guests"
+            ></textarea>
+
+            <label>Price Per Night (&#8377;) *</label>
+            <input type="text" id="price" placeholder="e.g. 25000" />
+            <div class="error" id="err-price"></div>
+
+            <label>Contact Number 1 *</label>
+            <input
+              type="text"
+              id="contact1"
+              placeholder="10-digit mobile number"
+              maxlength="10"
+            />
+            <div class="error" id="err-contact1"></div>
+
+            <label>Contact Number 2 <small>(Optional)</small></label>
+            <input
+              type="text"
+              id="contact2"
+              placeholder="10-digit mobile number"
+              maxlength="10"
+            />
+            <div class="error" id="err-contact2"></div>
+
+            <label>Upload Venue Images (Max 10) *</label>
+
+            <input type="file" id="images" multiple accept="image/*" />
+            <div class="error" id="err-images"></div>
+
+            <div class="preview-container" id="preview"></div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn" id="submitBtn">
+                Save Venue
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="showView('list')"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- ── VENUES LIST VIEW ── -->
-<div id="listView" style="display:none;">
-    <div class="page-wrapper">
-        <div class="container">
-            <h2>My Venues</h2>
-            <div id="venueList"></div>
-        </div>
-    </div>
-</div>
+    <script>
+      // ── Storage (Backend API) ──
+      let venuesCache = [];
 
-<!-- ── FORM VIEW ── -->
-<div id="formView">
-    <div class="page-wrapper">
-        <div class="container">
-            <h2 id="formTitle">Venue Information</h2>
+      let selectedFiles = []; // Array to hold new accumulated image files for upload
+      let existingImages = []; // Array to hold already uploaded image URLs for the current venue
+      let deletedServerImages = []; // Array to track which existing images the user wants to delete
 
-            <form id="venueForm">
-                <input type="hidden" id="editIndex" value="-1">
-
-                <label>Venue Name *</label>
-                <input type="text" id="venueName" placeholder="e.g. Grand Ballroom">
-                <div class="error" id="err-venueName"></div>
-
-                <label>Owner / Manager Name *</label>
-                <input type="text" id="ownerName" placeholder="e.g. Ramesh Sharma">
-                <div class="error" id="err-ownerName"></div>
-
-                <label>Venue Address *</label>
-                <textarea id="venueAddress" rows="2" placeholder="Street / Area"></textarea>
-                <div class="error" id="err-venueAddress"></div>
-
-                <label>City *</label>
-                <input type="text" id="city" placeholder="e.g. Mumbai">
-                <div class="error" id="err-city"></div>
-
-                <label>State *</label>
-                <input type="text" id="state" placeholder="e.g. Maharashtra">
-                <div class="error" id="err-state"></div>
-
-                <label>Maximum People Capacity *</label>
-                <input type="text" id="capacity" placeholder="e.g. 500">
-                <div class="error" id="err-capacity"></div>
-
-                <label>Total Area (sq. ft) <small>(Optional)</small></label>
-                <input type="text" id="totalArea" placeholder="e.g. 8000">
-
-                <label>Parking Area (sq. ft) <small>(Optional)</small></label>
-                <input type="text" id="parkingArea" placeholder="e.g. 2000">
-
-                <label>Venue Type *</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="venueType" value="AC"> AC</label>
-                    <label><input type="radio" name="venueType" value="Non-AC"> Non-AC</label>
-                    <label><input type="radio" name="venueType" value="Both"> Both</label>
-                </div>
-                <div class="error" id="err-venueType"></div>
-
-                <label>Facilities <small>(Optional)</small></label>
-                <input type="text" id="facilities" placeholder="e.g. WiFi, Projector, Catering, DJ">
-
-                <label>Instructions / Notes <small>(Optional)</small></label>
-                <textarea id="instructions" rows="2" placeholder="Any special rules or guidelines for guests"></textarea>
-
-                <label>Price Per Night (&#8377;) *</label>
-                <input type="text" id="price" placeholder="e.g. 25000">
-                <div class="error" id="err-price"></div>
-
-                <label>Contact Number 1 *</label>
-                <input type="text" id="contact1" placeholder="10-digit mobile number" maxlength="10">
-                <div class="error" id="err-contact1"></div>
-
-                <label>Contact Number 2 <small>(Optional)</small></label>
-                <input type="text" id="contact2" placeholder="10-digit mobile number" maxlength="10">
-                <div class="error" id="err-contact2"></div>
-
-                <label>Upload Venue Images (Max 10) *</label>
-                <input type="file" id="images" multiple accept="image/*">
-                <div class="error" id="err-images"></div>
-
-                <div class="preview-container" id="preview"></div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn" id="submitBtn">Save Venue</button>
-                    <button type="button" class="btn btn-secondary" onclick="showView('list')">Cancel</button>
-                </div>
-
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-
-// ── Storage (Backend API) ──
-let venuesCache = [];
-let selectedFiles = []; // Array to hold new accumulated image files for upload
-let existingImages = []; // Array to hold already uploaded image URLs for the current venue
-let deletedServerImages = []; // Array to track which existing images the user wants to delete
-
-function loadVenuesFromServer() {
-    fetch('/api/get-venues/')
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                venuesCache = data.venues;
-                if (document.getElementById("listView").style.display === "block") {
-                    renderVenueList();
-                } else if (document.getElementById("userView").style.display === "block") {
-                    renderUserView();
-                }
+      function loadVenuesFromServer() {
+        fetch("/api/get-venues/")
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              venuesCache = data.venues;
+              if (
+                document.getElementById("listView").style.display === "block"
+              ) {
+                renderVenueList();
+              } else if (
+                document.getElementById("userView").style.display === "block"
+              ) {
+                renderUserView();
+              }
             }
-        })
-        .catch(err => console.error("Error loading venues: ", err));
-}
+          })
+          .catch((err) => console.error("Error loading venues: ", err));
+      }
 
-function getVenues() {
-    return venuesCache;
-}
+      function getVenues() {
+        return venuesCache;
+      }
 
-// Automatically load venues when page starts
-document.addEventListener("DOMContentLoaded", loadVenuesFromServer);
+      // Automatically load venues when page starts
+      document.addEventListener("DOMContentLoaded", loadVenuesFromServer);
 
-// ── View switching ──
-function showView(view) {
-    document.getElementById("listView").style.display = view === "list" ? "block" : "none";
-    document.getElementById("formView").style.display = view === "form" ? "block" : "none";
-    document.getElementById("userView").style.display = view === "user" ? "block" : "none";
-    if (view === "list") renderVenueList();
-    if (view === "user") renderUserView();
-}
+      // ── View switching ──
+      function showView(view) {
+        document.getElementById("listView").style.display =
+          view === "list" ? "block" : "none";
+        document.getElementById("formView").style.display =
+          view === "form" ? "block" : "none";
+        document.getElementById("userView").style.display =
+          view === "user" ? "block" : "none";
+        if (view === "list") renderVenueList();
+        if (view === "user") renderUserView();
+      }
 
-function newVenue() {
-    resetForm();
-    document.getElementById("formTitle").textContent = "Add New Venue";
-    document.getElementById("submitBtn").textContent = "Save Venue";
-    document.getElementById("editIndex").value = -1;
-    showView("form");
-}
+      function newVenue() {
+        resetForm();
+        document.getElementById("formTitle").textContent = "Add New Venue";
+        document.getElementById("submitBtn").textContent = "Save Venue";
+        document.getElementById("editIndex").value = -1;
+        showView("form");
+      }
 
-function editVenue(idx) {
-    var venues = getVenues();
-    var v = venues[idx];
-    if (!v) return;
+      function editVenue(idx) {
+        var venues = getVenues();
+        var v = venues[idx];
+        if (!v) return;
 
-    resetForm();
-    document.getElementById("formTitle").textContent = "Modify Venue";
-    document.getElementById("submitBtn").textContent = "Update Venue";
-    document.getElementById("editIndex").value = idx;
+        resetForm();
+        document.getElementById("formTitle").textContent = "Modify Venue";
+        document.getElementById("submitBtn").textContent = "Update Venue";
+        document.getElementById("editIndex").value = idx;
 
-    document.getElementById("venueName").value    = v.venueName    || "";
-    document.getElementById("ownerName").value    = v.ownerName    || "";
-    document.getElementById("venueAddress").value = v.venueAddress || "";
-    document.getElementById("city").value         = v.city         || "";
-    document.getElementById("state").value        = v.state        || "";
-    document.getElementById("capacity").value     = v.capacity     || "";
-    document.getElementById("totalArea").value    = v.totalArea    || "";
-    document.getElementById("parkingArea").value  = v.parkingArea  || "";
-    document.getElementById("facilities").value   = v.facilities   || "";
-    document.getElementById("instructions").value = v.instructions || "";
-    document.getElementById("price").value        = v.price        || "";
-    document.getElementById("contact1").value     = v.contact1     || "";
-    document.getElementById("contact2").value     = v.contact2     || "";
+        document.getElementById("venueName").value = v.venueName || "";
+        document.getElementById("ownerName").value = v.ownerName || "";
+        document.getElementById("venueAddress").value = v.venueAddress || "";
+        document.getElementById("city").value = v.city || "";
+        document.getElementById("state").value = v.state || "";
+        document.getElementById("capacity").value = v.capacity || "";
+        document.getElementById("totalArea").value = v.totalArea || "";
+        document.getElementById("parkingArea").value = v.parkingArea || "";
+        document.getElementById("facilities").value = v.facilities || "";
+        document.getElementById("instructions").value = v.instructions || "";
+        document.getElementById("price").value = v.price || "";
+        document.getElementById("contact1").value = v.contact1 || "";
+        document.getElementById("contact2").value = v.contact2 || "";
 
-    if (v.venueType) {
-        var radio = document.querySelector("input[name='venueType'][value='" + v.venueType + "']");
-        if (radio) radio.checked = true;
-    }
+        if (v.venueType) {
+          var radio = document.querySelector(
+            "input[name='venueType'][value='" + v.venueType + "']",
+          );
+          if (radio) radio.checked = true;
+        }
 
-    if (v.images && v.images.length > 0) {
-        // Copy the array of existing image URLs
-        existingImages = [...v.images];
-    }
-
-    renderAllImages();
-    showView("form");
-}
-
-function deleteVenue(idx) {
-    if (!confirm("Delete functionality is currently disabled for this demo. Normally, this would remove the venue from the database.")) return;
-}
-
-function logout() {
-    window.location.href = "{% url 'logout' %}";
-}
-
-// ── Render user (customer) view ──
-function renderUserView() {
-    var venues = getVenues();
-    var container = document.getElementById("userVenueList");
-
-    if (venues.length === 0) {
-        container.innerHTML = "<p class='empty-state'>No venues available yet.</p>";
-        return;
-    }
-
-    var html = "";
-    venues.forEach(function(v) {
-        html += "<div class='venue-card'>";
-        html += "<div><span class='venue-card-name'>" + v.venueName + "</span>";
-        html += "<span class='venue-card-badge'>" + (v.venueType || "-") + "</span></div>";
-        html += "<p class='venue-card-info'>" + v.venueAddress + ", " + v.city + ", " + v.state + "</p>";
-        html += "<p class='venue-card-info'>Capacity: <strong>" + v.capacity + " people</strong> &nbsp;|&nbsp; Price: <strong>&#8377;" + v.price + " / night</strong></p>";
-        if (v.totalArea)   html += "<p class='venue-card-info'>Total Area: " + v.totalArea + " sq. ft</p>";
-        if (v.parkingArea) html += "<p class='venue-card-info'>Parking: " + v.parkingArea + " sq. ft</p>";
-        if (v.facilities)  html += "<p class='venue-card-info'>Facilities: " + v.facilities + "</p>";
-        if (v.instructions) html += "<p class='venue-card-info'>Notes: " + v.instructions + "</p>";
-        html += "<p class='venue-card-info'>Contact: " + v.contact1 + (v.contact2 ? "  /  " + v.contact2 : "") + "</p>";
-        
         if (v.images && v.images.length > 0) {
+          // Copy the array of existing image URLs
+          existingImages = [...v.images];
+        }
+
+        renderAllImages();
+        if (v.imageCount) {
+          var note = document.createElement("small");
+          note.id = "imageNote";
+          note.textContent =
+            v.imageCount +
+            " image(s) previously uploaded. Re-upload to replace.";
+          note.style.color = "#7a9aa0";
+          var imgInput = document.getElementById("images");
+          imgInput.parentNode.insertBefore(note, imgInput.nextSibling);
+        }
+
+        showView("form");
+      }
+
+      function deleteVenue(idx) {
+        if (
+          !confirm(
+            "Delete functionality is currently disabled for this demo. Normally, this would remove the venue from the database.",
+          )
+        )
+          return;
+      }
+
+      function logout() {
+        window.location.href = "{% url 'logout' %}";
+      }
+
+      // ── Render user (customer) view ──
+      function renderUserView() {
+        var venues = getVenues();
+        var container = document.getElementById("userVenueList");
+
+        if (venues.length === 0) {
+          container.innerHTML =
+            "<p class='empty-state'>No venues available yet.</p>";
+          return;
+        }
+
+        var html = "";
+        venues.forEach(function (v) {
+          html += "<div class='venue-card'>";
+          html +=
+            "<div><span class='venue-card-name'>" + v.venueName + "</span>";
+          html +=
+            "<span class='venue-card-badge'>" +
+            (v.venueType || "-") +
+            "</span></div>";
+          html +=
+            "<p class='venue-card-info'>" +
+            v.venueAddress +
+            ", " +
+            v.city +
+            ", " +
+            v.state +
+            "</p>";
+          html +=
+            "<p class='venue-card-info'>Capacity: <strong>" +
+            v.capacity +
+            " people</strong> &nbsp;|&nbsp; Price: <strong>&#8377;" +
+            v.price +
+            " / night</strong></p>";
+          if (v.totalArea)
+            html +=
+              "<p class='venue-card-info'>Total Area: " +
+              v.totalArea +
+              " sq. ft</p>";
+          if (v.parkingArea)
+            html +=
+              "<p class='venue-card-info'>Parking: " +
+              v.parkingArea +
+              " sq. ft</p>";
+          if (v.facilities)
+            html +=
+              "<p class='venue-card-info'>Facilities: " + v.facilities + "</p>";
+          if (v.instructions)
+            html +=
+              "<p class='venue-card-info'>Notes: " + v.instructions + "</p>";
+          html +=
+            "<p class='venue-card-info'>Contact: " +
+            v.contact1 +
+            (v.contact2 ? "  /  " + v.contact2 : "") +
+            "</p>";
+
+          if (v.images && v.images.length > 0) {
             html += "<div class='preview-container' style='margin-top: 10px;'>";
-            v.images.forEach(imgUrl => {
-                html += "<img src='" + imgUrl + "' alt='Venue Image'>";
+            v.images.forEach((imgUrl) => {
+              html += "<img src='" + imgUrl + "' alt='Venue Image'>";
             });
             html += "</div>";
+          }
+
+          html += "</div>";
+        });
+        container.innerHTML = html;
+      }
+
+      // ── Render venue list ──
+      function renderVenueList() {
+        var venues = getVenues();
+        var container = document.getElementById("venueList");
+
+        if (venues.length === 0) {
+          container.innerHTML =
+            "<p class='empty-state'>No venues added yet. Click <strong>+ Add New Venue</strong> to get started.</p>";
+          return;
         }
-        
-        html += "</div>";
-    });
-    container.innerHTML = html;
-}
 
-// ── Render venue list ──
-function renderVenueList() {
-    var venues = getVenues();
-    var container = document.getElementById("venueList");
+        var html = "";
+        venues.forEach(function (v, idx) {
+          html += "<div class='venue-card'>";
+          html +=
+            "<div><span class='venue-card-name'>" + v.venueName + "</span>";
+          html +=
+            "<span class='venue-card-badge'>" +
+            (v.venueType || "-") +
+            "</span></div>";
+          html += "<p class='venue-card-info'>" + v.ownerName + "</p>";
+          html +=
+            "<p class='venue-card-info'>" +
+            v.venueAddress +
+            ", " +
+            v.city +
+            ", " +
+            v.state +
+            "</p>";
+          html +=
+            "<p class='venue-card-info'>Capacity: <strong>" +
+            v.capacity +
+            " people</strong> &nbsp;|&nbsp; Price: <strong>&#8377;" +
+            v.price +
+            " / night</strong></p>";
+          html +=
+            "<p class='venue-card-info'>Contact: " +
+            v.contact1 +
+            (v.contact2 ? "  /  " + v.contact2 : "") +
+            "</p>";
+          if (v.facilities)
+            html +=
+              "<p class='venue-card-info'>Facilities: " + v.facilities + "</p>";
 
-    if (venues.length === 0) {
-        container.innerHTML = "<p class='empty-state'>No venues added yet. Click <strong>+ Add New Venue</strong> to get started.</p>";
-        return;
-    }
-
-    var html = "";
-    venues.forEach(function(v, idx) {
-        html += "<div class='venue-card'>";
-        html += "<div><span class='venue-card-name'>" + v.venueName + "</span>";
-        html += "<span class='venue-card-badge'>" + (v.venueType || "-") + "</span></div>";
-        html += "<p class='venue-card-info'>" + v.ownerName + "</p>";
-        html += "<p class='venue-card-info'>" + v.venueAddress + ", " + v.city + ", " + v.state + "</p>";
-        html += "<p class='venue-card-info'>Capacity: <strong>" + v.capacity + " people</strong> &nbsp;|&nbsp; Price: <strong>&#8377;" + v.price + " / night</strong></p>";
-        html += "<p class='venue-card-info'>Contact: " + v.contact1 + (v.contact2 ? "  /  " + v.contact2 : "") + "</p>";
-        if (v.facilities) html += "<p class='venue-card-info'>Facilities: " + v.facilities + "</p>";
-        
-        if (v.images && v.images.length > 0) {
-            html += "<div class='preview-container' style='margin-top: 10px; margin-bottom: 15px;'>";
-            v.images.forEach(imgUrl => {
-                html += "<img src='" + imgUrl + "' alt='Venue Image'>";
+          if (v.images && v.images.length > 0) {
+            html +=
+              "<div class='preview-container' style='margin-top: 10px; margin-bottom: 15px;'>";
+            v.images.forEach((imgUrl) => {
+              html += "<img src='" + imgUrl + "' alt='Venue Image'>";
             });
             html += "</div>";
+          }
+
+          html += "<div class='venue-card-actions'>";
+          html +=
+            "<button class='btn' onclick='editVenue(" +
+            idx +
+            ")'>Modify</button>";
+          html +=
+            "<button class='btn btn-danger' onclick='deleteVenue(" +
+            idx +
+            ")'>Delete</button>";
+          html += "</div></div>";
+        });
+        container.innerHTML = html;
+      }
+
+      // ── Digits-only for numeric fields ──
+      ["capacity", "totalArea", "parkingArea", "price"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("keydown", function (e) {
+          var allowed = [
+            "Backspace",
+            "Delete",
+            "Tab",
+            "ArrowLeft",
+            "ArrowRight",
+            "Home",
+            "End",
+          ];
+          if (allowed.includes(e.key)) return;
+          if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+        });
+        el.addEventListener("input", function () {
+          this.value = this.value.replace(/[^0-9]/g, "");
+        });
+      });
+
+      // ── Digits-only for phone fields ──
+      ["contact1", "contact2"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", function () {
+          this.value = this.value.replace(/[^0-9]/g, "").slice(0, 10);
+        });
+      });
+
+      // ── Image Preview ──
+      var imageInput = document.getElementById("images");
+      var previewContainer = document.getElementById("preview");
+
+      imageInput.addEventListener("change", function () {
+        if (
+          existingImages.length -
+            deletedServerImages.length +
+            selectedFiles.length +
+            this.files.length >
+          10
+        ) {
+          alert("You can upload maximum 10 images only.");
+          this.value = "";
+          return;
         }
 
-        html += "<div class='venue-card-actions'>";
-        html += "<button class='btn' onclick='editVenue(" + idx + ")'>Modify</button>";
-        html += "<button class='btn btn-danger' onclick='deleteVenue(" + idx + ")'>Delete</button>";
-        html += "</div></div>";
-    });
-    container.innerHTML = html;
-}
-
-// ── Digits-only for numeric fields ──
-["capacity", "totalArea", "parkingArea", "price"].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener("keydown", function(e) {
-        var allowed = ["Backspace","Delete","Tab","ArrowLeft","ArrowRight","Home","End"];
-        if (id === "price") allowed.push(".");
-        if (allowed.includes(e.key)) return;
-        if (!/^[0-9\.]$/.test(e.key) && !(id === "price" && e.key === ".")) e.preventDefault();
-    });
-    el.addEventListener("input", function() {
-        if (id === "price") {
-            this.value = this.value.replace(/[^0-9\.]/g, "");
-        } else {
-            this.value = this.value.replace(/[^0-9]/g, "");
-        }
-    });
-});
-
-// ── Digits-only for phone fields ──
-["contact1", "contact2"].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener("input", function() {
-        this.value = this.value.replace(/[^0-9]/g, "").slice(0, 10);
-    });
-});
-
-// ── Image Preview ──
-var imageInput = document.getElementById("images");
-var previewContainer = document.getElementById("preview");
-
-imageInput.addEventListener("change", function() {
-    if (existingImages.length - deletedServerImages.length + selectedFiles.length + this.files.length > 10) {
-        alert("You can upload maximum 10 images only.");
-        this.value = "";
-        return;
-    }
-
-    // Accumulate new files
-    for (var i = 0; i < this.files.length; i++) {
-        var file = this.files[i];
-        if (!file.type.startsWith("image/")) {
+        for (var i = 0; i < this.files.length; i++) {
+          var file = this.files[i];
+          if (!file.type.startsWith("image/")) {
             alert("Only image files are allowed.");
+
             continue;
+          }
+          selectedFiles.push(file);
         }
-        selectedFiles.push(file);
-    }
-    
-    // Clear error if files are accumulated
-    if (existingImages.length - deletedServerImages.length + selectedFiles.length > 0) {
-        clearError("images");
-    }
 
-    renderAllImages();
-    
-    // Clear the input value so the exact same file can be selected again sequentially if needed
-    this.value = "";
-});
+        // Clear error if files are accumulated
+        if (
+          existingImages.length -
+            deletedServerImages.length +
+            selectedFiles.length >
+          0
+        ) {
+          clearError("images");
+        }
 
-function createThumbnail(src, onRemove) {
-    var wrapper = document.createElement("div");
-    wrapper.className = "image-preview-wrapper";
-    wrapper.style.position = "relative";
-    wrapper.style.display = "inline-block";
-    wrapper.style.margin = "5px";
+        renderAllImages();
 
-    var img = document.createElement("img");
-    img.src = src;
-    
-    var removeBtn = document.createElement("button");
-    removeBtn.innerHTML = "&times;";
-    removeBtn.className = "remove-image-btn";
-    removeBtn.style.position = "absolute";
-    removeBtn.style.top = "5px";
-    removeBtn.style.right = "5px";
-    removeBtn.style.background = "rgba(255, 0, 0, 0.8)";
-    removeBtn.style.color = "white";
-    removeBtn.style.border = "none";
-    removeBtn.style.borderRadius = "50%";
-    removeBtn.style.cursor = "pointer";
-    removeBtn.style.width = "24px";
-    removeBtn.style.height = "24px";
-    removeBtn.style.lineHeight = "22px";
-    removeBtn.style.fontWeight = "bold";
-    removeBtn.style.padding = "0";
-    removeBtn.style.fontSize = "16px";
-    removeBtn.title = "Remove image";
+        // Clear the input value so the exact same file can be selected again sequentially if needed
+        this.value = "";
+      });
 
-    removeBtn.onclick = function(e) {
-        e.preventDefault();
-        onRemove();
-    };
+      function createThumbnail(src, onRemove) {
+        var wrapper = document.createElement("div");
+        wrapper.className = "image-preview-wrapper";
+        wrapper.style.position = "relative";
+        wrapper.style.display = "inline-block";
+        wrapper.style.margin = "5px";
 
-    wrapper.appendChild(img);
-    wrapper.appendChild(removeBtn);
-    return wrapper;
-}
+        var img = document.createElement("img");
+        img.src = src;
 
-function renderAllImages() {
-    previewContainer.innerHTML = "";
-    
-    // 1. Render existing server images (that haven't been deleted by user yet)
-    existingImages.forEach((imgUrl, index) => {
-        // Skip rendering if marked for deletion
-        if (deletedServerImages.includes(imgUrl)) return;
-        
-        let thumb = createThumbnail(imgUrl, function() {
+        var removeBtn = document.createElement("button");
+        removeBtn.innerHTML = "&times;";
+        removeBtn.className = "remove-image-btn";
+        removeBtn.style.position = "absolute";
+        removeBtn.style.top = "5px";
+        removeBtn.style.right = "5px";
+        removeBtn.style.background = "rgba(255, 0, 0, 0.8)";
+        removeBtn.style.color = "white";
+        removeBtn.style.border = "none";
+        removeBtn.style.borderRadius = "50%";
+        removeBtn.style.cursor = "pointer";
+        removeBtn.style.width = "24px";
+        removeBtn.style.height = "24px";
+        removeBtn.style.lineHeight = "22px";
+        removeBtn.style.fontWeight = "bold";
+        removeBtn.style.padding = "0";
+        removeBtn.style.fontSize = "16px";
+        removeBtn.title = "Remove image";
+
+        removeBtn.onclick = function (e) {
+          e.preventDefault();
+          onRemove();
+        };
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        return wrapper;
+      }
+
+      function renderAllImages() {
+        previewContainer.innerHTML = "";
+
+        // 1. Render existing server images (that haven't been deleted by user yet)
+        existingImages.forEach((imgUrl, index) => {
+          // Skip rendering if marked for deletion
+          if (deletedServerImages.includes(imgUrl)) return;
+
+          let thumb = createThumbnail(imgUrl, function () {
             deletedServerImages.push(imgUrl);
             renderAllImages();
+          });
+          previewContainer.appendChild(thumb);
         });
-        previewContainer.appendChild(thumb);
-    });
 
-    // 2. Render newly selected files
-    selectedFiles.forEach((file, index) => {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            let thumb = createThumbnail(e.target.result, function() {
-                selectedFiles.splice(index, 1);
-                renderAllImages();
+        // 2. Render newly selected files
+        selectedFiles.forEach((file, index) => {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            let thumb = createThumbnail(e.target.result, function () {
+              selectedFiles.splice(index, 1);
+              renderAllImages();
             });
             previewContainer.appendChild(thumb);
-        };
-        reader.readAsDataURL(file);
-    });
-}
+          };
+          reader.readAsDataURL(file);
+        });
+      }
 
-// ── Error helpers ──
-function setError(id, msg) {
-    var el = document.getElementById("err-" + id);
-    if (el) el.textContent = msg;
-}
-function clearError(id) { setError(id, ""); }
+      p; // ── Error helpers ──
+      function setError(id, msg) {
+        var el = document.getElementById("err-" + id);
+        if (el) el.textContent = msg;
+      }
+      function clearError(id) {
+        setError(id, "");
+      }
 
-// ── Real-time Validation (Clear errors on input/change) ──
-["venueName", "ownerName", "venueAddress", "city", "state", "capacity", "price", "contact1", "contact2"].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener("input", function() {
-        if (this.value.trim().length > 0) {
+      // ── Real-time Validation (Clear errors on input/change) ──
+      [
+        "venueName",
+        "ownerName",
+        "venueAddress",
+        "city",
+        "state",
+        "capacity",
+        "price",
+        "contact1",
+        "contact2",
+      ].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", function () {
+          if (this.value.trim().length > 0) {
             clearError(id);
-        }
-    });
-});
+          }
+        });
+      });
 
-document.querySelectorAll("input[name='venueType']").forEach(function(radio) {
-    radio.addEventListener("change", function() {
-        clearError("venueType");
-    });
-});
+      document
+        .querySelectorAll("input[name='venueType']")
+        .forEach(function (radio) {
+          radio.addEventListener("change", function () {
+            clearError("venueType");
+          });
+        });
 
-// ── Validation ──
-function validate() {
-    var valid = true;
-    var isEdit = parseInt(document.getElementById("editIndex").value) >= 0;
+      // ── Validation ──
+      function validate() {
+        var valid = true;
+        var isEdit = parseInt(document.getElementById("editIndex").value) >= 0;
 
-    if (!document.getElementById("venueName").value.trim()) {
-        setError("venueName", "Venue name is required."); valid = false;
-    } else clearError("venueName");
+        if (!document.getElementById("venueName").value.trim()) {
+          setError("venueName", "Venue name is required.");
+          valid = false;
+        } else clearError("venueName");
 
-    if (!document.getElementById("ownerName").value.trim()) {
-        setError("ownerName", "Owner / Manager name is required."); valid = false;
-    } else clearError("ownerName");
+        if (!document.getElementById("ownerName").value.trim()) {
+          setError("ownerName", "Owner / Manager name is required.");
+          valid = false;
+        } else clearError("ownerName");
 
-    if (!document.getElementById("venueAddress").value.trim()) {
-        setError("venueAddress", "Address is required."); valid = false;
-    } else clearError("venueAddress");
+        if (!document.getElementById("venueAddress").value.trim()) {
+          setError("venueAddress", "Address is required.");
+          valid = false;
+        } else clearError("venueAddress");
 
-    if (!document.getElementById("city").value.trim()) {
-        setError("city", "City is required."); valid = false;
-    } else clearError("city");
+        if (!document.getElementById("city").value.trim()) {
+          setError("city", "City is required.");
+          valid = false;
+        } else clearError("city");
 
-    if (!document.getElementById("state").value.trim()) {
-        setError("state", "State is required."); valid = false;
-    } else clearError("state");
+        if (!document.getElementById("state").value.trim()) {
+          setError("state", "State is required.");
+          valid = false;
+        } else clearError("state");
 
-    if (!document.getElementById("capacity").value.trim()) {
-        setError("capacity", "Capacity is required."); valid = false;
-    } else clearError("capacity");
+        if (!document.getElementById("capacity").value.trim()) {
+          setError("capacity", "Capacity is required.");
+          valid = false;
+        } else clearError("capacity");
 
-    if (!document.querySelector("input[name='venueType']:checked")) {
-        setError("venueType", "Please select a venue type."); valid = false;
-    } else clearError("venueType");
+        if (!document.querySelector("input[name='venueType']:checked")) {
+          setError("venueType", "Please select a venue type.");
+          valid = false;
+        } else clearError("venueType");
 
-    if (!document.getElementById("price").value.trim()) {
-        setError("price", "Price per night is required."); valid = false;
-    } else clearError("price");
+        if (!document.getElementById("price").value.trim()) {
+          setError("price", "Price per night is required.");
+          valid = false;
+        } else clearError("price");
 
-    var c1 = document.getElementById("contact1").value.trim();
-    if (!c1) {
-        setError("contact1", "Contact number is required."); valid = false;
-    } else if (c1.length !== 10) {
-        setError("contact1", "Must be a valid 10-digit number."); valid = false;
-    } else clearError("contact1");
+        var c1 = document.getElementById("contact1").value.trim();
+        if (!c1) {
+          setError("contact1", "Contact number is required.");
+          valid = false;
+        } else if (c1.length !== 10) {
+          setError("contact1", "Must be a valid 10-digit number.");
+          valid = false;
+        } else clearError("contact1");
 
-    var c2 = document.getElementById("contact2").value.trim();
-    if (c2 && c2.length !== 10) {
-        setError("contact2", "Must be a valid 10-digit number."); valid = false;
-    } else clearError("contact2");
+        var c2 = document.getElementById("contact2").value.trim();
+        if (c2 && c2.length !== 10) {
+          setError("contact2", "Must be a valid 10-digit number.");
+          valid = false;
+        } else clearError("contact2");
 
-    var activeImageCount = (existingImages.length - deletedServerImages.length) + selectedFiles.length;
-    if (activeImageCount === 0) {
-        setError("images", "Please upload at least one venue image."); valid = false;
-    } else clearError("images");
+        var activeImageCount =
+          existingImages.length -
+          deletedServerImages.length +
+          selectedFiles.length;
+        if (activeImageCount === 0) {
+          setError("images", "Please upload at least one venue image.");
+          valid = false;
+        } else clearError("images");
 
-    return valid;
-}
+        return valid;
+      }
 
-// ── Submit ──
-document.getElementById("venueForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    if (!validate()) return;
+      // ── Submit ──
+      document
+        .getElementById("venueForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (!validate()) return;
 
+          var formData = new FormData();
+          var venueType = document.querySelector(
+            "input[name='venueType']:checked",
+          );
+          var idx = parseInt(document.getElementById("editIndex").value);
 
-    var formData = new FormData();
-    var venueType = document.querySelector("input[name='venueType']:checked");
-    var idx = parseInt(document.getElementById("editIndex").value);
-    
-    // If editing, get the existing venue ID
-    if (idx >= 0) {
-        formData.append("venue_id", getVenues()[idx].id);
-    }
-    
-    formData.append("venueName", document.getElementById("venueName").value.trim());
-    formData.append("ownerName", document.getElementById("ownerName").value.trim());
-    formData.append("venueAddress", document.getElementById("venueAddress").value.trim());
-    formData.append("city", document.getElementById("city").value.trim());
-    formData.append("state", document.getElementById("state").value.trim());
-    formData.append("capacity", document.getElementById("capacity").value.trim());
-    formData.append("totalArea", document.getElementById("totalArea").value.trim());
-    formData.append("parkingArea", document.getElementById("parkingArea").value.trim());
-    formData.append("venueType", venueType ? venueType.value : "");
-    formData.append("facilities", document.getElementById("facilities").value.trim());
-    formData.append("instructions", document.getElementById("instructions").value.trim());
-    formData.append("price", document.getElementById("price").value.trim());
-    formData.append("contact1", document.getElementById("contact1").value.trim());
-    formData.append("contact2", document.getElementById("contact2").value.trim());
-    
-    // Append accumulated images
-    if (selectedFiles.length > 0) {
-        for (var i = 0; i < selectedFiles.length; i++) {
-            formData.append("images", selectedFiles[i]);
-        }
-    }
-    
-    // Append deleted server images
-    if (deletedServerImages.length > 0) {
-        for (var i = 0; i < deletedServerImages.length; i++) {
-            formData.append("deleted_images[]", deletedServerImages[i]);
-        }
-    }
-    
-    // Add CSRF token
-    var csrfToken = '{{ csrf_token }}';
+          // If editing, get the existing venue ID
+          if (idx >= 0) {
+            formData.append("venue_id", getVenues()[idx].id);
+          }
 
-    var submitBtn = document.getElementById("submitBtn");
-    var originalText = submitBtn.textContent;
-    submitBtn.textContent = "Saving...";
-    submitBtn.disabled = true;
+          formData.append(
+            "venueName",
+            document.getElementById("venueName").value.trim(),
+          );
+          formData.append(
+            "ownerName",
+            document.getElementById("ownerName").value.trim(),
+          );
+          formData.append(
+            "venueAddress",
+            document.getElementById("venueAddress").value.trim(),
+          );
+          formData.append("city", document.getElementById("city").value.trim());
+          formData.append(
+            "state",
+            document.getElementById("state").value.trim(),
+          );
+          formData.append(
+            "capacity",
+            document.getElementById("capacity").value.trim(),
+          );
+          formData.append(
+            "totalArea",
+            document.getElementById("totalArea").value.trim(),
+          );
+          formData.append(
+            "parkingArea",
+            document.getElementById("parkingArea").value.trim(),
+          );
+          formData.append("venueType", venueType ? venueType.value : "");
+          formData.append(
+            "facilities",
+            document.getElementById("facilities").value.trim(),
+          );
+          formData.append(
+            "instructions",
+            document.getElementById("instructions").value.trim(),
+          );
+          formData.append(
+            "price",
+            document.getElementById("price").value.trim(),
+          );
+          formData.append(
+            "contact1",
+            document.getElementById("contact1").value.trim(),
+          );
+          formData.append(
+            "contact2",
+            document.getElementById("contact2").value.trim(),
+          );
 
-    fetch('/api/save-venue/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-        
-        if (data.status === 'success') {
-            alert(data.message);
-            resetForm();
-            loadVenuesFromServer(); // Reload venues from DB
-            showView("list");
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(err => {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-        alert("An error occurred while saving the venue.");
-        console.error(err);
-    });
-});
+          // Append accumulated images
+          if (selectedFiles.length > 0) {
+            for (var i = 0; i < selectedFiles.length; i++) {
+              formData.append("images", selectedFiles[i]);
+            }
+          }
 
-// ── Reset ──
-function resetForm() {
-    document.getElementById("venueForm").reset();
-    selectedFiles = []; // Reset the photo array
-    existingImages = []; 
-    deletedServerImages = [];
-    previewContainer.innerHTML = "";
-    document.querySelectorAll(".error").forEach(function(el) { el.textContent = ""; });
-    document.getElementById("editIndex").value = -1;
-}
+          // Append deleted server images
+          if (deletedServerImages.length > 0) {
+            for (var i = 0; i < deletedServerImages.length; i++) {
+              formData.append("deleted_images[]", deletedServerImages[i]);
+            }
+          }
 
-// Start on list view
-showView("list");
+          // Add CSRF token
+          var csrfToken = "{{ csrf_token }}";
 
-</script>
+          var submitBtn = document.getElementById("submitBtn");
+          var originalText = submitBtn.textContent;
+          submitBtn.textContent = "Saving...";
+          submitBtn.disabled = true;
 
-</body>
+          fetch("/api/save-venue/", {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": csrfToken,
+            },
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+
+              if (data.status === "success") {
+                alert(data.message);
+                resetForm();
+                loadVenuesFromServer(); // Reload venues from DB
+                showView("list");
+              } else {
+                alert("Error: " + data.message);
+              }
+            })
+            .catch((err) => {
+              submitBtn.textContent = originalText;
+              submitBtn.disabled = false;
+              alert("An error occurred while saving the venue.");
+              console.error(err);
+            });
+        });
+
+      // ── Reset ──
+      function resetForm() {
+        document.getElementById("venueForm").reset();
+
+        selectedFiles = []; // Reset the photo array
+        existingImages = [];
+        deletedServerImages = [];
+        previewContainer.innerHTML = "";
+        document.querySelectorAll(".error").forEach(function (el) {
+          el.textContent = "";
+        });
+        var note = document.getElementById("imageNote");
+        if (note) note.remove();
+        document.getElementById("editIndex").value = -1;
+      }
+
+      // Start on list view
+      showView("list");
+    </script>
+  </body>
 </html>

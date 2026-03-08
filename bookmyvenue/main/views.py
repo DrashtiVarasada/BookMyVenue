@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .models import User, Venue, VenueImage
 
-
 # ---------------------------------------------------------------------------
 # Auth views
 # ---------------------------------------------------------------------------
@@ -196,7 +195,6 @@ def save_venue(request):
                 venue = Venue.objects.get(id=venue_id, owner=owner)
             else:
                 venue = Venue(owner=owner)
-
             venue.name = data.get('venueName')
             venue.owner_name = data.get('ownerName')
             venue.address = data.get('venueAddress')
@@ -248,7 +246,6 @@ def get_venues(request):
     if request.method == 'GET':
         owner = request.user
         venues = Venue.objects.filter(owner=owner)
-
         venues_data = []
         for v in venues:
             venues_data.append({
@@ -279,7 +276,6 @@ def get_venues(request):
 def get_all_venues(request):
     if request.method == 'GET':
         venues = Venue.objects.all()
-
         venues_data = []
         for v in venues:
             venues_data.append({
@@ -303,5 +299,4 @@ def get_all_venues(request):
             })
 
         return JsonResponse({'status': 'success', 'venues': venues_data})
-
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

@@ -10,6 +10,7 @@ env/
 *.log
 db.sqlite3
 
+
 # Uploaded Media
 /media/
 /staticfiles/
@@ -18,6 +19,17 @@ db.sqlite3
 .env
 
 # OS / IDE
+# Local settings override
+local_settings.py
+
+# IDE settings
 .vscode/
 .idea/
 .DS_Store
+
+# Test coverage reports
+.coverage
+htmlcov/
+
+# OS files
+Thumbs.db

@@ -38,7 +38,6 @@ class Venue(models.Model):
     def __str__(self):
         return self.name
 
-
 class VenueImage(models.Model):
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='venue_images/')
