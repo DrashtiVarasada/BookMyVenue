@@ -44,3 +44,17 @@ class VenueImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.venue.name}"
+
+class Booking(models.Model):
+    venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name='bookings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
+    date = models.DateField()
+    special_requirements = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Prevent double booking the same venue on the same date at the DB level
+        unique_together = ('venue', 'date')
+
+    def __str__(self):
+        return f"Booking: {self.venue.name} by {self.user.username} on {self.date}"

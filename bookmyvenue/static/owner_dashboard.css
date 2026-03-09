@@ -71,7 +71,8 @@ label small {
 
 input[type="text"],
 input[type="tel"],
-textarea {
+textarea,
+select {
   width: 100%;
   padding: 12px 14px;
   margin-top: 6px;
@@ -87,7 +88,8 @@ textarea {
 
 input[type="text"]:focus,
 input[type="tel"]:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: #12343b;
 }
 

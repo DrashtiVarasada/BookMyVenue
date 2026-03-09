@@ -1,55 +1,384 @@
- <!doctype html>
+{% load static %}
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Customer Dashboard</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Segoe UI", sans-serif;
-      }
-      nav {
-        background: #667eea;
-        color: white;
-        padding: 1rem 2rem;
-        display: flex;
-        justify-content: space-between;
-      }
-      .container {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 20px;
-      }
-      .card {
-        background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-      a {
-        color: white;
-        text-decoration: none;
-      }
-    </style>
+    <title>Customer Dashboard - BookMyVenue</title>
+    <!-- Flatpickr for booking calendar -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{% static 'customer_dashboard.css' %}" />    
   </head>
   <body>
-    <nav>
-      <h2>BookMyVenue - Customer Portal</h2>
-      <div>
-        <span>Welcome, {{ full_name }}! </span>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <span class="navbar-brand">BookMyVenue - Welcome, {{ full_name }}!</span>
+      <div class="navbar-links">
         <a href="{% url 'logout' %}">Logout</a>
       </div>
     </nav>
-    <div class="container">
-      <div class="card">
-        <h1>Customer Dashboard</h1>
-        <p>
-          This is a blank customer dashboard. You can add your content here.
-        </p>
+
+    <!-- Page Content -->
+    <div class="page-wrapper">
+      
+      <!-- City Selection View -->
+      <div class="container" id="citySelectionView">
+        <h2>Select Your City</h2>
+        <div class="select-wrapper">
+          <select id="citySelect" class="city-select">
+            <option value="" disabled selected>-- Choose a City --</option>
+            <option value="ahemedabad">Ahmedabad</option>
+            <option value="surat">Surat</option>
+            <option value="rajkot">Rajkot</option>
+            <option value="baroda">Baroda</option>
+          </select>
+        </div>
+        <button class="btn" onclick="continueToVenues()">Continue</button>
       </div>
+
+      <!-- Venues Display View (Hidden initially) -->
+      <div class="venues-container" id="venuesView" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 id="venuesTitle" style="margin-bottom: 0;">Venues</h2>
+          <button class="btn btn-secondary" onclick="changeCity()">&#8592; Change City</button>
+        </div>
+        <div id="venueList" class="venue-grid">
+          <!-- Venues will be populated here -->
+          <p class="empty-state">Loading venues...</p>
+        </div>
+      </div>
+
+      <!-- Venue Detail View (Hidden initially) -->
+      <div class="container" id="venueDetailView" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 id="detailVenueName" style="margin-bottom: 0; text-align: left;">Venue Name</h2>
+          <button class="btn btn-secondary" onclick="backToVenues()">&#8592; Back to Venues</button>
+        </div>
+        <div id="venueDetailContent">
+        </div>
+
+        <!-- Booking Section (Step 1) -->
+        <div id="bookingStep1" style="background: #fff; border-radius: 12px; padding: 25px; border: 1.5px solid #bfcfd8; margin-top: 20px;">
+          <h3 style="color: #12343b; margin-bottom: 15px; font-size: 18px;">Check Availability</h3>
+          <p style="color: #4a6b72; font-size: 14px; margin-bottom: 10px;">Select available dates to reserve this venue.</p>
+          
+          <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="bookingDate" placeholder="Select dates..." style="padding: 12px 14px; border-radius: 10px; border: 1.5px solid #bfcfd8; font-size: 14px; flex-grow: 1; max-width: 250px;">
+            <button class="btn" id="bookBtn" onclick="proceedToConfirmation()" style="margin-top: 0; width: auto; padding: 12px 30px;">Book</button>
+          </div>
+          <div id="bookingStep1Msg" style="margin-top: 10px; font-size: 14px; display: none;"></div>
+        </div>
+
+        <!-- Booking Confirmation (Step 2) -->
+        <div id="bookingStep2" style="background: #fff; border-radius: 12px; padding: 25px; border: 1.5px solid #bfcfd8; margin-top: 20px; display: none;">
+          <h3 style="color: #12343b; margin-bottom: 15px; font-size: 18px;">Confirm Your Booking</h3>
+          <p style="color: #4a6b72; font-size: 14px; margin-bottom: 15px;">Please review your selected dates and enter your details.</p>
+          
+          <div style="margin-bottom: 15px; padding: 15px; background: #eaf2f4; border-radius: 10px;">
+              <strong style="color:#12343b; display: block; margin-bottom: 5px;">Selected Dates:</strong>
+              <div id="confirmDatesList" style="color: #4a6b72; font-size: 14px;"></div>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+              <label style="display: block; font-weight: 600; color: #12343b; margin-bottom: 8px; font-size: 14px;">Full Name *</label>
+              <input type="text" id="bookingName" value="{{ full_name }}" style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #bfcfd8; font-size: 14px;" required>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+              <label style="display: block; font-weight: 600; color: #12343b; margin-bottom: 8px; font-size: 14px;">Contact Number *</label>
+              <input type="text" id="bookingPhone" placeholder="10-digit mobile number" style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #bfcfd8; font-size: 14px;" required>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+              <label style="display: block; font-weight: 600; color: #12343b; margin-bottom: 8px; font-size: 14px;">Special Requirements (Optional)</label>
+              <textarea id="bookingRequirements" placeholder="Any specific decorations, catering needs, or arrangements?" rows="3" style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #bfcfd8; font-size: 14px; resize: vertical;"></textarea>
+          </div>
+
+          <div style="display: flex; gap: 15px;">
+            <button class="btn" id="finalConfirmBtn" onclick="submitBooking()" style="margin-top: 0; flex: 1;">Confirm Booking</button>
+            <button class="btn btn-secondary" onclick="backToStep1()" style="margin-top: 0; flex: 1;">Cancel</button>
+          </div>
+          <div id="bookingStep2Msg" style="margin-top: 10px; font-size: 14px; display: none;"></div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- JavaScript for UI logic -->
+    <script>
+      let currentCityVenues = [];
+      let activeVenueId = null;
+      let datePicker = null;
+
+      function continueToVenues() {
+        const citySelect = document.getElementById("citySelect");
+        const selectedCity = citySelect.value;
+        
+        if (!selectedCity) {
+          alert("Please select a city to continue.");
+          return;
+        }
+
+        // Hide city selection and detail view, show venues view
+        document.getElementById("citySelectionView").style.display = "none";
+        document.getElementById("venueDetailView").style.display = "none";
+        document.getElementById("venuesView").style.display = "block";
+        document.getElementById("venuesTitle").textContent = "Venues in " + citySelect.options[citySelect.selectedIndex].text;
+
+        document.getElementById("venueList").innerHTML = '<p class="empty-state">Loading venues...</p>';
+
+        // Trigger an API call to load venues for selectedCity here
+        loadVenuesForCity(selectedCity);
+      }
+
+      function changeCity() {
+        // Hide venues view, show city selection
+        document.getElementById("venuesView").style.display = "none";
+        document.getElementById("venueDetailView").style.display = "none";
+        document.getElementById("citySelectionView").style.display = "block";
+        document.getElementById("venueList").innerHTML = '<p class="empty-state">Loading venues...</p>';
+      }
+
+      function backToVenues() {
+        document.getElementById("venueDetailView").style.display = "none";
+        document.getElementById("venuesView").style.display = "block";
+        window.scrollTo(0, 0);
+      }
+
+      function renderVenues(venues) {
+        currentCityVenues = venues; // Store for detail view access
+        const container = document.getElementById("venueList");
+
+        if (venues.length === 0) {
+          container.innerHTML = "<p class='empty-state'>No venues available in this city yet.</p>";
+          return;
+        }
+
+        let html = "";
+        venues.forEach(function (v, index) {
+          let imgTag = (v.images && v.images.length > 0) 
+            ? `<img src="${v.images[0]}" alt="${v.venueName}">` 
+            : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#7a9aa0; font-size:14px; background:#eaf2f4;">No Image</div>`;
+
+          html += `<div class='venue-card' onclick='showVenueDetail(${index})'>`;
+          html += `<div class='venue-card-img-container'>${imgTag}</div>`;
+          html += `<div class='venue-card-content'>`;
+          html += `<span class='venue-card-name'>${v.venueName}</span>`;
+          html += `</div></div>`;
+        });
+        container.innerHTML = html;
+      }
+
+      function showVenueDetail(index) {
+        const v = currentCityVenues[index];
+        if (!v) return;
+
+        document.getElementById("venuesView").style.display = "none";
+        document.getElementById("venueDetailView").style.display = "block";
+        document.getElementById("detailVenueName").textContent = v.venueName;
+
+        let html = "";
+        
+        if (v.images && v.images.length > 0) {
+          html += "<div class='detail-images'>";
+          v.images.forEach((imgUrl) => {
+             html += `<img src='${imgUrl}' alt='Venue Image'>`;
+          });
+          html += "</div>";
+        }
+
+        html += `<div style="background: #fff; border-radius: 12px; padding: 25px; border: 1.5px solid #bfcfd8;">`;
+        html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:12px;'><strong style='color:#12343b;'>City Area:</strong> ${v.venueAddress}, ${v.city}, ${v.state}</p>`;
+        html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:12px;'><strong style='color:#12343b;'>Type:</strong> ${v.venueType} &nbsp;|&nbsp; <strong style='color:#12343b;'>Capacity:</strong> ${v.capacity} people &nbsp;|&nbsp; <strong style='color:#12343b;'>Price:</strong> &#8377;${v.price} / night</p>`;
+        
+        if (v.totalArea) html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:12px;'><strong style='color:#12343b;'>Total Area:</strong> ${v.totalArea} sq. ft</p>`;
+        if (v.parkingArea) html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:12px;'><strong style='color:#12343b;'>Parking:</strong> ${v.parkingArea} sq. ft</p>`;
+        if (v.facilities) html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:12px;'><strong style='color:#12343b;'>Facilities:</strong> ${v.facilities}</p>`;
+        if (v.instructions) html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:12px;'><strong style='color:#12343b;'>Notes:</strong> ${v.instructions}</p>`;
+        html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:0;'><strong style='color:#12343b;'>Contact:</strong> ${v.contact1} ${v.contact2 ? " / " + v.contact2 : ""}</p>`;
+        
+        html += `</div>`;
+
+        document.getElementById("venueDetailContent").innerHTML = html;
+        activeVenueId = v.id;
+        
+        // Reset booking steps and messages
+        document.getElementById("bookingStep1").style.display = "block";
+        document.getElementById("bookingStep2").style.display = "none";
+        
+        document.getElementById("bookingStep1Msg").style.display = "none";
+        document.getElementById("bookingStep2Msg").style.display = "none";
+        document.getElementById("bookingPhone").value = "";
+        document.getElementById("bookingRequirements").value = "";
+
+        // Initialize flatpickr (disabled while fetching dates)
+        document.getElementById("bookingDate").value = "";
+        if (datePicker) {
+            datePicker.destroy();
+        }
+        
+        datePicker = flatpickr("#bookingDate", {
+            mode: "multiple",
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            disable: [] // Will populate after fetch
+        });
+
+        // Fetch booked dates for this venue
+        fetchBookedDates(v.id);
+
+        window.scrollTo(0, 0);
+      }
+
+      function fetchBookedDates(venueId) {
+          fetch(`/api/get-booked-dates/${venueId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && datePicker) {
+                    // Update flatpickr to disable these dates
+                    datePicker.set('disable', data.booked_dates);
+                }
+            })
+            .catch(err => console.error("Error fetching booked dates:", err));
+      }
+
+      function proceedToConfirmation() {
+          const dateStr = document.getElementById("bookingDate").value;
+          const msgEl = document.getElementById("bookingStep1Msg");
+          
+          if (!dateStr) {
+              msgEl.style.display = "block";
+              msgEl.style.color = "#c0392b";
+              msgEl.textContent = "Please select at least one date first.";
+              return;
+          }
+
+          msgEl.style.display = "none";
+          
+          // Format dates for display
+          const rawDates = dateStr.split(",").map(d => d.trim()).filter(d => d);
+          const displayDates = rawDates.map(d => {
+              const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+              return new Date(d).toLocaleDateString(undefined, options);
+          });
+          
+          document.getElementById("confirmDatesList").innerHTML = displayDates.join("<br>");
+          
+          // Switch to step 2
+          document.getElementById("bookingStep1").style.display = "none";
+          document.getElementById("bookingStep2").style.display = "block";
+      }
+
+      function backToStep1() {
+          document.getElementById("bookingStep2").style.display = "none";
+          document.getElementById("bookingStep1").style.display = "block";
+          document.getElementById("bookingStep2Msg").style.display = "none";
+      }
+
+      function submitBooking() {
+          if (!activeVenueId) return;
+          
+          const dateStr = document.getElementById("bookingDate").value;
+          const name = document.getElementById("bookingName").value.trim();
+          const phone = document.getElementById("bookingPhone").value.trim();
+          const requirements = document.getElementById("bookingRequirements").value.trim();
+          const msgEl = document.getElementById("bookingStep2Msg");
+          const btn = document.getElementById("finalConfirmBtn");
+          
+          if (!name || !phone) {
+              msgEl.style.display = "block";
+              msgEl.style.color = "#c0392b";
+              msgEl.textContent = "Please provide your full name and contact number.";
+              return;
+          }
+          
+          // Validate 10-digit phone number
+          const phoneRegex = /^\d{10}$/;
+          if (!phoneRegex.test(phone)) {
+              msgEl.style.display = "block";
+              msgEl.style.color = "#c0392b";
+              msgEl.textContent = "Please enter a valid 10-digit contact number.";
+              return;
+          }
+
+          msgEl.style.display = "none";
+          const originalText = btn.textContent;
+          btn.textContent = "Processing...";
+          btn.disabled = true;
+
+          const csrfToken = "{{ csrf_token }}";
+
+          // Note: The backend currently ignores name/phone and links to request.user. 
+          // We send them anyway in case the backend needs them later.
+          fetch("/api/book-venue/", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": csrfToken
+              },
+              body: JSON.stringify({
+                  venue_id: activeVenueId,
+                  date: dateStr,
+                  customer_name: name,
+                  customer_phone: phone,
+                  special_requirements: requirements
+              })
+          })
+          .then(response => response.json())
+          .then(data => {
+              btn.textContent = originalText;
+              btn.disabled = false;
+              
+              if (data.status === "success") {
+                  // Show success inside step 1 and reset form
+                  backToStep1();
+                  let step1Msg = document.getElementById("bookingStep1Msg");
+                  step1Msg.style.display = "block";
+                  step1Msg.style.color = "#27ae60"; // Green
+                  step1Msg.textContent = "Booking confirmed successfully!";
+                  
+                  // Clear picker and refresh disabled dates
+                  document.getElementById("bookingDate").value = "";
+                  document.getElementById("bookingPhone").value = "";
+                  fetchBookedDates(activeVenueId);
+              } else {
+                  msgEl.style.display = "block";
+                  msgEl.style.color = "#c0392b";
+                  msgEl.textContent = data.message || "Failed to book venue.";
+              }
+          })
+          .catch(err => {
+              btn.textContent = originalText;
+              btn.disabled = false;
+              msgEl.style.display = "block";
+              msgEl.style.color = "#c0392b";
+              msgEl.textContent = "An error occurred while booking.";
+              console.error(err);
+          });
+      }
+
+      function loadVenuesForCity(city) {
+        // Fetch venues for the given city using the existing /api/get-all-venues/
+        fetch("/api/get-all-venues/")
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              const venues = data.venues;
+              // Filter venues by city
+              const filteredVenues = venues.filter(v => v.city.toLowerCase() === city.toLowerCase());
+              renderVenues(filteredVenues);
+            } else {
+              document.getElementById("venueList").innerHTML = "<p class='empty-state'>Failed to load venues.</p>";
+            }
+          })
+          .catch((err) => {
+            console.error("Error loading venues: ", err);
+            document.getElementById("venueList").innerHTML = "<p class='empty-state'>Error loading venues.</p>";
+          });
+      }
+    </script>
   </body>
 </html>

@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/save-venue/', views.save_venue, name='save_venue'),
     path('api/get-venues/', views.get_venues, name='get_venues'),
     path('api/get-all-venues/', views.get_all_venues, name='get_all_venues'),
+    path('api/get-booked-dates/<int:venue_id>/', views.get_booked_dates, name='get_booked_dates'),
+    path('api/book-venue/', views.book_venue, name='book_venue'),
 ]

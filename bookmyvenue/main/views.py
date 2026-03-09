@@ -3,7 +3,9 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import User, Venue, VenueImage
+from .models import User, Venue, VenueImage, Booking
+import json
+from datetime import datetime
 
 # ---------------------------------------------------------------------------
 # Auth views
@@ -299,4 +301,71 @@ def get_all_venues(request):
             })
 
         return JsonResponse({'status': 'success', 'venues': venues_data})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+@login_required(login_url='login')
+def get_booked_dates(request, venue_id):
+    if request.method == 'GET':
+        try:
+            bookings = Booking.objects.filter(venue_id=venue_id)
+            # Return list of ISO formatted date strings: ['2023-10-25', '2023-10-26']
+            booked_dates = [booking.date.isoformat() for booking in bookings]
+            return JsonResponse({'status': 'success', 'booked_dates': booked_dates})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+@login_required(login_url='login')
+def book_venue(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            venue_id = data.get('venue_id')
+            date_str = data.get('date')
+            special_requirements = data.get('special_requirements', '')
+
+            if not venue_id or not date_str:
+                return JsonResponse({'status': 'error', 'message': 'Missing venue or date.'}, status=400)
+
+            # Flatpickr sends multiple dates as a comma-separated string: "2023-10-25, 2023-10-26"
+            date_strings = [d.strip() for d in date_str.split(',') if d.strip()]
+            
+            if not date_strings:
+                 return JsonResponse({'status': 'error', 'message': 'No valid dates provided.'}, status=400)
+
+            venue = Venue.objects.get(id=venue_id)
+            bookings_to_create = []
+
+            for ds in date_strings:
+                booking_date = datetime.strptime(ds, '%Y-%m-%d').date()
+                
+                # Check if date is in the past
+                if booking_date < datetime.now().date():
+                     return JsonResponse({'status': 'error', 'message': f'Cannot book a date in the past: {ds}'}, status=400)
+
+                # Check if already booked
+                if Booking.objects.filter(venue_id=venue_id, date=booking_date).exists():
+                    return JsonResponse({'status': 'error', 'message': f'Date {ds} is already booked.'}, status=400)
+                
+                bookings_to_create.append(Booking(
+                    venue=venue, 
+                    user=request.user, 
+                    date=booking_date,
+                    special_requirements=special_requirements
+                ))
+
+            # Create bookings in bulk if all validations pass
+            Booking.objects.bulk_create(bookings_to_create)
+
+            return JsonResponse({'status': 'success', 'message': f'Venue booked successfully for {len(bookings_to_create)} day(s)!'})
+
+        except ValueError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+        except Venue.DoesNotExist:
+             return JsonResponse({'status': 'error', 'message': 'Venue not found.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
