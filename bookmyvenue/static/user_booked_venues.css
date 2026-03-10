@@ -1,88 +1,78 @@
-/* Base Reset */
+/* Reset */
 *{
-box-sizing:border-box;
 margin:0;
 padding:0;
+box-sizing:border-box;
 }
 
 body{
 font-family:Arial, sans-serif;
 background:#d9e1e6;
-min-height:100vh;
-padding:40px;
-display:flex;
-justify-content:center;
-align-items:flex-start;
+padding:30px;
 }
 
-/* Table Container */
-.booking-table{
-width:900px;
-background:white;
-border-radius:15px;
-overflow:hidden;
-box-shadow:0 10px 25px rgba(0,0,0,0.15);
-border-collapse:collapse;
-}
+/* Navbar */
 
-/* Table Header */
-.booking-table th{
+.navbar{
 background:#12343b;
+padding:14px 25px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+}
+
+.navbar-brand{
 color:white;
-padding:14px;
-font-size:15px;
-text-align:left;
+font-size:18px;
+font-weight:bold;
 }
 
-/* Table Data */
-.booking-table td{
-padding:14px;
-font-size:14px;
-color:#333;
-border-bottom:1px solid #eee;
+.navbar-links{
+display:flex;
+gap:15px;
+font-size: medium;
 }
 
-/* Row Hover */
-.booking-table tr:hover
-
-/* Buttons */
-.btn{
-padding:8px 18px;
-border:none;
-border-radius:25px;
-font-size:13px;
-font-weight:600;
-cursor:pointer;
-transition:background 0.2s;
-}
-
-/* Cancel Button */
-.btn-danger{
-background:#c0392b;
+.navbar-links a{
 color:white;
+text-decoration:none;
 }
 
-.btn-danger:hover
-
-/* Empty Table Message */
-.empty-state{
-text-align:center;
-padding:25px;
-color:#7a9aa0;
-font-size:15px;
-}
-
-/* Responsive */
-@media (max-width:900px){
+/* Table */
 
 .booking-table{
 width:100%;
+background:white;
+border-collapse:collapse;
 }
 
-.booking-table th,
+.booking-table th{
+background:#12343b;
+color:white;
+padding:12px;
+text-align:left;
+}
+
 .booking-table td{
-font-size:12px;
-padding:10px;
+padding:12px;
+border-bottom:1px solid #ddd;
 }
 
+/* Buttons */
+
+.btn{
+padding:7px 16px;
+border:none;
+border-radius:20px;
+background:#12343b;
+color:white;
+font-size:13px;
+cursor:pointer;
+}
+
+/* Cancel button */
+
+.btn-danger{
+background:#c0392b;
 }

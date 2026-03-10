@@ -15,7 +15,7 @@
       <span class="navbar-brand">BookMyVenue - Welcome, {{ full_name }}!</span>
       <div class="navbar-links">
         <button class="btn" onclick="showBookedVenues()">Booked Venues</button>
-        <a href="{% url 'logout' %}">Logout</a>
+        <button class="btn" onclick="logoutop()">Logout</button>
       </div>
     </nav>
 
@@ -133,6 +133,10 @@
 
         // Trigger an API call to load venues for selectedCity here
         loadVenuesForCity(selectedCity);
+      }
+
+      function logoutop(){
+        window.location.href = "{% url 'logout' %}"
       }
 
       function showBookedVenues() {

@@ -11,8 +11,8 @@
     <nav class="navbar">
       <span class="navbar-brand">BookMyVenue - Welcome, {{ full_name }}!</span>
       <div class="navbar-links">
-        <button class="btn" onclick="showBookedVenues()">Booked Venues</button>
-        <a href="{% url 'logout' %}">Logout</a>
+        <button class="btn" onclick="showhomepage()" >Home</button>
+        <button class="btn" onclick="logoutop()">Logout</button>
       </div>
     </nav>
 <table class="booking-table">
@@ -46,8 +46,11 @@
 
 </table>
 <script>
-    function showBookedVenues() {
-        window.location.href = "{% url 'user_booked_venues' %}";
+    function logoutop(){
+        window.location.href = "{% url 'logout' %}"
+    }
+    function showhomepage() {
+        window.location.href = "{% url 'dashboard' %}";
     }
     function cancelBooking(bookingId) {
 

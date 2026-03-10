@@ -385,18 +385,29 @@ def owner_booking_details(request):
         {'bookings': bookings}
     )
 
+# @login_required(login_url='login')
+# def user_booked_venues(request):
+
+#     bookings = Booking.objects.filter(
+#         user=request.user
+#     ).select_related('venue')
+
+#     return render(
+#         request,
+#         'user_booked_venues.html',
+#         {'bookings': bookings}
+#     )
 @login_required(login_url='login')
 def user_booked_venues(request):
 
-    bookings = Booking.objects.filter(
-        user=request.user
-    ).select_related('venue')
+    bookings = Booking.objects.filter(user=request.user)
 
-    return render(
-        request,
-        'user_booked_venues.html',
-        {'bookings': bookings}
-    )
+    context = {
+        'bookings': bookings,
+        'full_name': request.user.username
+    }
+
+    return render(request, 'user_booked_venues.html', context)
 @login_required(login_url='login')
 def cancel_booking(request, booking_id):
 
