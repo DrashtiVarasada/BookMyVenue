@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'user_booked_venues.css' %}">
+    <title>Document</title>
+</head>
+<body>
+    <nav class="navbar">
+      <span class="navbar-brand">BookMyVenue - Welcome, {{ full_name }}!</span>
+      <div class="navbar-links">
+        <button class="btn" onclick="showBookedVenues()">Booked Venues</button>
+        <a href="{% url 'logout' %}">Logout</a>
+      </div>
+    </nav>
+<table class="booking-table">
+<tr>
+<th>Venue</th>
+<th>City</th>
+<th>Date</th>
+<th>Requirements</th>
+<th>Action</th>
+</tr>
+
+{% for booking in bookings %}
+
+<tr>
+
+<td>{{ booking.venue.name }}</td>
+
+<td>{{ booking.venue.city }}</td>
+
+<td>{{ booking.date }}</td>
+
+<td>{{ booking.special_requirements }}</td>
+
+<td>
+<button class="btn btn-danger"onclick="cancelBooking({{ booking.id }})">Cancel</button>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+<script>
+    function showBookedVenues() {
+        window.location.href = "{% url 'user_booked_venues' %}";
+    }
+    function cancelBooking(bookingId) {
+
+if (!confirm("Are you sure you want to cancel this booking?")) {
+return;
+}
+
+fetch("/api/cancel-booking/" + bookingId + "/", {
+
+method: "POST",
+
+headers: {
+"X-CSRFToken": "{{ csrf_token }}",
+"Content-Type": "application/json"
+}
+
+})
+.then(response => response.json())
+
+.then(data => {
+
+if (data.status === "success") {
+
+alert("Booking cancelled successfully!");
+
+location.reload();
+
+} else {
+
+alert("Error: " + data.message);
+
+}
+
+})
+.catch(err => {
+console.error(err);
+alert("Something went wrong.");
+});
+
+}
+</script>
+</body>
+</html>

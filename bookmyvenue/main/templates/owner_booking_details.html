@@ -1,0 +1,107 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Booking Details - BookMyVenue</title>
+
+<link rel="stylesheet" href="{% static 'owner_booking_details.css' %}">
+
+</head>
+
+<body>
+
+<!-- Navbar -->
+
+<nav class="navbar">
+
+<span class="navbar-brand">
+BookMyVenue - Booking Details
+</span>
+
+<div class="navbar-links">
+
+<a href="{% url 'dashboard' %}" class="btn btn-secondary">
+← Back to Dashboard
+</a>
+
+<a href="{% url 'logout' %}" class="btn btn-danger">
+Logout
+</a>
+
+</div>
+
+</nav>
+
+<div class="page-wrapper">
+
+<div class="container">
+
+<h2>All Booking Details</h2>
+
+{% if bookings %}
+
+<table class="booking-table">
+
+<thead>
+
+<tr>
+
+<th>Customer Name</th>
+<th>Venue</th>
+<th>Booking Date</th>
+<th>Special Requirements</th>
+<th>Booked On</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for booking in bookings %}
+
+<tr>
+
+<td>{{ booking.user.username }}</td>
+
+<td>{{ booking.venue.name }}</td>
+
+<td>{{ booking.date }}</td>
+
+<td>
+{% if booking.special_requirements %}
+{{ booking.special_requirements }}
+{% else %}
+<span class="no-data">None</span>
+{% endif %}
+</td>
+
+<td>{{ booking.created_at|date:"d M Y" }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% else %}
+
+<div class="empty-state">
+No bookings have been made yet.
+</div>
+
+{% endif %}
+
+</div>
+
+</div>
+
+</body>
+</html>

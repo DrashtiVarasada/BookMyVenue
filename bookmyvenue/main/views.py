@@ -369,3 +369,61 @@ def book_venue(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@login_required(login_url='login')
+def owner_booking_details(request):
+
+    owner = request.user
+
+    bookings = Booking.objects.filter(
+        venue__owner=owner
+    ).select_related('venue', 'user')
+
+    return render(
+        request,
+        'owner_booking_details.html',
+        {'bookings': bookings}
+    )
+
+@login_required(login_url='login')
+def user_booked_venues(request):
+
+    bookings = Booking.objects.filter(
+        user=request.user
+    ).select_related('venue')
+
+    return render(
+        request,
+        'user_booked_venues.html',
+        {'bookings': bookings}
+    )
+@login_required(login_url='login')
+def cancel_booking(request, booking_id):
+
+    if request.method == "POST":
+
+        try:
+
+            booking = Booking.objects.get(
+                id=booking_id,
+                user=request.user
+            )
+
+            booking.delete()
+
+            return JsonResponse({
+                "status": "success",
+                "message": "Booking cancelled"
+            })
+
+        except Booking.DoesNotExist:
+
+            return JsonResponse({
+                "status": "error",
+                "message": "Booking not found"
+            }, status=404)
+
+    return JsonResponse({
+        "status": "error",
+        "message": "Invalid request"
+    }, status=400)

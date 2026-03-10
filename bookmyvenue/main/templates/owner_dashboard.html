@@ -16,7 +16,8 @@
       <div class="navbar-links">
         <button class="btn" onclick="showView('list')">My Venues</button>
         <button class="btn" onclick="newVenue()">+ Add New Venue</button>
-        <button class="btn btn-secondary" onclick="showView('user')">
+         <button class="btn" onclick="showBookingDetails()">Booking Details</button>
+          <button class="btn btn-secondary" onclick="showView('user')">
           &#128065; View as User
         </button>
         <button class="btn btn-danger" onclick="logout()">Logout</button>
@@ -238,6 +239,10 @@
         document.getElementById("submitBtn").textContent = "Save Venue";
         document.getElementById("editIndex").value = -1;
         showView("form");
+      }
+
+      function showBookingDetails() {
+        window.location.href = "{% url 'owner_booking_details' %}";
       }
 
       function editVenue(idx) {
@@ -513,7 +518,6 @@
         // Clear the input value so the exact same file can be selected again sequentially if needed
         this.value = "";
       });
-
       function createThumbnail(src, onRemove) {
         var wrapper = document.createElement("div");
         wrapper.className = "image-preview-wrapper";

@@ -1,0 +1,88 @@
+/* Base Reset */
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+}
+
+body{
+font-family:Arial, sans-serif;
+background:#d9e1e6;
+min-height:100vh;
+padding:40px;
+display:flex;
+justify-content:center;
+align-items:flex-start;
+}
+
+/* Table Container */
+.booking-table{
+width:900px;
+background:white;
+border-radius:15px;
+overflow:hidden;
+box-shadow:0 10px 25px rgba(0,0,0,0.15);
+border-collapse:collapse;
+}
+
+/* Table Header */
+.booking-table th{
+background:#12343b;
+color:white;
+padding:14px;
+font-size:15px;
+text-align:left;
+}
+
+/* Table Data */
+.booking-table td{
+padding:14px;
+font-size:14px;
+color:#333;
+border-bottom:1px solid #eee;
+}
+
+/* Row Hover */
+.booking-table tr:hover
+
+/* Buttons */
+.btn{
+padding:8px 18px;
+border:none;
+border-radius:25px;
+font-size:13px;
+font-weight:600;
+cursor:pointer;
+transition:background 0.2s;
+}
+
+/* Cancel Button */
+.btn-danger{
+background:#c0392b;
+color:white;
+}
+
+.btn-danger:hover
+
+/* Empty Table Message */
+.empty-state{
+text-align:center;
+padding:25px;
+color:#7a9aa0;
+font-size:15px;
+}
+
+/* Responsive */
+@media (max-width:900px){
+
+.booking-table{
+width:100%;
+}
+
+.booking-table th,
+.booking-table td{
+font-size:12px;
+padding:10px;
+}
+
+}

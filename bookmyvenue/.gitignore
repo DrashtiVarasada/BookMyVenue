@@ -12,7 +12,7 @@ env/
 
 
 # Uploaded Media
-/media/
+#/media/
 /staticfiles/
 
 # Environment variables
