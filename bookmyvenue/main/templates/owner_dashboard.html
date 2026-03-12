@@ -432,15 +432,35 @@
           }
 
           html += "<div class='venue-card-actions'>";
-          html +=
-            "<button class='btn' onclick='editVenue(" +
-            idx +
-            ")'>Modify</button>";
-          html +=
-            "<button class='btn btn-danger' onclick='deleteVenue(" +
-            idx +
-            ")'>Delete</button>";
-          html += "</div></div>";
+html += "<button class='btn' onclick='editVenue(" + idx + ")'>Modify</button>";
+html += "<button class='btn btn-danger' onclick='deleteVenue(" + idx + ")'>Delete</button>";
+html += "</div>";
+
+// SHOW FEEDBACK BELOW BUTTONS
+if(v.feedbacks && v.feedbacks.length > 0){
+
+html += "<div style='margin-top:15px;padding-top:10px;border-top:1px solid #ddd'>";
+html += "<strong>Customer Reviews:</strong>";
+
+v.feedbacks.forEach(function(f){
+
+html += "<div style='margin-top:8px'>";
+html += "<b>" + f.user + "</b><br>";
+html += "<span style='color:#4a6b72'>" + f.message + "</span><br>";
+html += "<small style='color:#999'>" + f.date + "</small>";
+html += "</div>";
+
+});
+
+html += "</div>";
+
+}else{
+
+html += "<p style='color:#7a9aa0;margin-top:10px'>No feedback yet.</p>";
+
+}
+
+html += "</div>";
         });
         container.innerHTML = html;
       }

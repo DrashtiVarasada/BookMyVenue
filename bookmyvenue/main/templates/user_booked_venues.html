@@ -38,13 +38,26 @@
 
 <td>
 <button class="btn btn-danger"onclick="cancelBooking({{ booking.id }})">Cancel</button>
+<button class="btn"onclick="openFeedback({{ booking.venue.id }})">Feedback</button>
 </td>
-
 </tr>
 
 {% endfor %}
 
 </table>
+<div id="feedbackBox" style="display:none;margin-top:20px">
+
+<h3>Write Feedback</h3>
+
+<textarea id="feedbackText"
+rows="3"
+style="width:100%"></textarea>
+
+<button class="btn" onclick="submitFeedback()">
+Submit
+</button>
+
+</div>
 <script>
     function logoutop(){
         window.location.href = "{% url 'logout' %}"
@@ -88,6 +101,48 @@ alert("Error: " + data.message);
 .catch(err => {
 console.error(err);
 alert("Something went wrong.");
+});
+
+}
+let currentVenueId = null;
+
+function openFeedback(venueId){
+
+currentVenueId = venueId;
+
+document.getElementById("feedbackBox").style.display="block";
+
+}
+function submitFeedback(){
+
+const msg = document.getElementById("feedbackText").value;
+
+fetch("/api/add-feedback/",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json",
+"X-CSRFToken":"{{ csrf_token }}"
+},
+
+body:JSON.stringify({
+venue_id:currentVenueId,
+message:msg
+})
+
+})
+.then(res=>res.json())
+.then(data=>{
+
+if(data.status==="success"){
+
+alert("Feedback submitted");
+
+document.getElementById("feedbackText").value="";
+
+}
+
 });
 
 }

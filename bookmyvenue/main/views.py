@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from .models import User, Venue, VenueImage, Booking
 import json
 from datetime import datetime
+from .models import User, Venue, VenueImage, Booking, Feedback
 
 # ---------------------------------------------------------------------------
 # Auth views
@@ -54,9 +55,7 @@ def login_view(request):
 
 
 def signup_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-
+   
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -267,7 +266,13 @@ def get_venues(request):
                 'contact1': v.contact1,
                 'contact2': v.contact2,
                 'imageCount': v.images.count(),
-                'images': [img.image.url for img in v.images.all()]
+                'images': [img.image.url for img in v.images.all()],
+                'feedbacks': [{
+                "user": f.user.username,
+                "message": f.message,
+                "date": f.created_at.strftime("%d %b %Y")
+                }
+                for f in v.feedbacks.all()]
             })
 
         return JsonResponse({'status': 'success', 'venues': venues_data})
@@ -438,3 +443,68 @@ def cancel_booking(request, booking_id):
         "status": "error",
         "message": "Invalid request"
     }, status=400)
+
+@login_required(login_url='login')
+def add_feedback(request):
+
+    if request.method == "POST":
+
+        data = json.loads(request.body)
+
+        venue_id = data.get("venue_id")
+        message = data.get("message")
+
+        if not message:
+            return JsonResponse({
+                "status":"error",
+                "message":"Feedback cannot be empty"
+            })
+
+        venue = Venue.objects.get(id=venue_id)
+
+        Feedback.objects.create(
+            venue=venue,
+            user=request.user,
+            message=message
+        )
+
+        return JsonResponse({
+            "status":"success"
+        })
+
+    return JsonResponse({"status":"error"})
+
+def get_feedbacks(request, venue_id):
+
+    feedbacks = Feedback.objects.filter(
+        venue_id=venue_id
+    ).select_related("user")
+
+    data = []
+
+    for f in feedbacks:
+        data.append({
+            "user":f.user.username,
+            "message":f.message,
+            "date":f.created_at.strftime("%d %b %Y")
+        })
+
+    return JsonResponse({
+        "status":"success",
+        "feedbacks":data
+    })
+
+@login_required(login_url='login')
+def owner_feedbacks(request):
+
+    owner = request.user
+
+    feedbacks = Feedback.objects.filter(
+        venue__owner=owner
+    ).select_related("venue","user")
+
+    return render(
+        request,
+        "owner_feedbacks.html",
+        {"feedbacks":feedbacks}
+    )

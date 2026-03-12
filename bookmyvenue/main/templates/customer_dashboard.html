@@ -210,6 +210,11 @@
         html += `<p class='venue-card-info' style='font-size:16px; margin-bottom:0;'><strong style='color:#12343b;'>Contact:</strong> ${v.contact1} ${v.contact2 ? " / " + v.contact2 : ""}</p>`;
         
         html += `</div>`;
+        html += `<div style="margin-top:20px">
+          <h3>Customer Reviews</h3>
+          <div id="feedbackList">
+            </div>
+            </div>`;
 
         document.getElementById("venueDetailContent").innerHTML = html;
         activeVenueId = v.id;
@@ -240,6 +245,7 @@
         fetchBookedDates(v.id);
 
         window.scrollTo(0, 0);
+        loadFeedbacks(v.id);
       }
 
       function fetchBookedDates(venueId) {
@@ -388,6 +394,27 @@
             document.getElementById("venueList").innerHTML = "<p class='empty-state'>Error loading venues.</p>";
           });
       }
+      function loadFeedbacks(venueId){
+
+fetch("/api/get-feedbacks/"+venueId+"/")
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let html="";
+
+data.feedbacks.forEach(f=>{
+
+html += "<p><b>"+f.user+"</b>: "+f.message+"</p>";
+
+});
+
+document.getElementById("feedbackList").innerHTML=html;
+
+});
+
+}
     </script>
   </body>
 </html>
