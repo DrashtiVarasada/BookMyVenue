@@ -37,8 +37,13 @@
 <td>{{ booking.special_requirements }}</td>
 
 <td>
-<button class="btn btn-danger"onclick="cancelBooking({{ booking.id }})">Cancel</button>
-<button class="btn"onclick="openFeedback({{ booking.venue.id }})">Feedback</button>
+{% now "Y-m-d" as today %}
+{% if booking.date|date:"Y-m-d" >= today %}
+<button class="btn btn-danger" data-booking-id="{{ booking.id }}" onclick="cancelBooking(this.dataset.bookingId)">Cancel</button>
+{% else %}
+<span style="color:#888; font-size:13px; font-style:italic;">Completed</span>
+{% endif %}
+<button class="btn" data-venue-id="{{ booking.venue.id }}" onclick="openFeedback(this.dataset.venueId)">Feedback</button>
 </td>
 </tr>
 

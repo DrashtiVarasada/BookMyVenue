@@ -27,11 +27,7 @@
         <h2>Select Your City</h2>
         <div class="select-wrapper">
           <select id="citySelect" class="city-select">
-            <option value="" disabled selected>-- Choose a City --</option>
-            <option value="ahemedabad">Ahmedabad</option>
-            <option value="surat">Surat</option>
-            <option value="rajkot">Rajkot</option>
-            <option value="baroda">Baroda</option>
+            <option value="" disabled selected>Loading cities...</option>
           </select>
         </div>
         <button class="btn" onclick="continueToVenues()">Continue</button>
@@ -113,6 +109,33 @@
       let currentCityVenues = [];
       let activeVenueId = null;
       let datePicker = null;
+
+      // Load cities dynamically from the database on page load
+      function loadCities() {
+        fetch("/api/get-cities/")
+          .then(res => res.json())
+          .then(data => {
+            const select = document.getElementById("citySelect");
+            if (data.status === "success" && data.cities.length > 0) {
+              select.innerHTML = '<option value="" disabled selected>-- Choose a City --</option>';
+              data.cities.forEach(function(city) {
+                const opt = document.createElement("option");
+                opt.value = city;
+                opt.textContent = city.charAt(0).toUpperCase() + city.slice(1);
+                select.appendChild(opt);
+              });
+            } else {
+              select.innerHTML = '<option value="" disabled selected>No cities available yet</option>';
+            }
+          })
+          .catch(function() {
+            const select = document.getElementById("citySelect");
+            select.innerHTML = '<option value="" disabled selected>Failed to load cities</option>';
+          });
+      }
+
+      // Run on page load
+      loadCities();
 
       function continueToVenues() {
         const citySelect = document.getElementById("citySelect");
@@ -356,7 +379,7 @@
                   step1Msg.textContent = "Booking confirmed successfully!";
                   
                   // Clear picker and refresh disabled dates
-                  document.getElementById("bookingDate").value = "";
+                  if (datePicker) datePicker.clear();
                   document.getElementById("bookingPhone").value = "";
                   fetchBookedDates(activeVenueId);
               } else {

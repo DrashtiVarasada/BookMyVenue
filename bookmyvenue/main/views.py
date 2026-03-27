@@ -280,6 +280,22 @@ def get_venues(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
+def get_cities(request):
+    if request.method == 'GET':
+        raw_cities = Venue.objects.values_list('city', flat=True)
+        # Normalise to Title Case and deduplicate (case-insensitive)
+        seen = set()
+        cities = []
+        for city in raw_cities:
+            normalised = city.strip().title()
+            if normalised.lower() not in seen:
+                seen.add(normalised.lower())
+                cities.append(normalised)
+        cities.sort()
+        return JsonResponse({'status': 'success', 'cities': cities})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
 def get_all_venues(request):
     if request.method == 'GET':
         venues = Venue.objects.all()
@@ -424,6 +440,13 @@ def cancel_booking(request, booking_id):
                 id=booking_id,
                 user=request.user
             )
+
+            # Prevent cancelling past bookings
+            if booking.date < datetime.now().date():
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Cannot cancel a booking for a past date."
+                }, status=400)
 
             booking.delete()
 
